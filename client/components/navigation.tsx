@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Search, ShoppingCart, Menu, X } from "lucide-react";
+import Link from "next/link";
+import { Search, ShoppingCart, Menu, X, User } from "lucide-react";
 
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
@@ -43,12 +44,29 @@ export default function Navigation() {
             >
               Sale
             </a>
+            <Link
+              href="/about"
+              className="text-sm font-light hover:text-muted-foreground transition"
+            >
+              About
+            </Link>
+            <Link
+              href="/contact"
+              className="text-sm font-light hover:text-muted-foreground transition"
+            >
+              Contact
+            </Link>
           </div>
 
           {/* Right Icons */}
           <div className="flex items-center space-x-4">
             <Search className="w-5 h-5 cursor-pointer hover:text-muted-foreground transition" />
-            <ShoppingCart className="w-5 h-5 cursor-pointer hover:text-muted-foreground transition" />
+            <Link href="/dashboard">
+              <User className="w-5 h-5 cursor-pointer hover:text-muted-foreground transition" />
+            </Link>
+            <Link href="/cart">
+              <ShoppingCart className="w-5 h-5 cursor-pointer hover:text-muted-foreground transition" />
+            </Link>
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="md:hidden p-2 hover:bg-secondary rounded-lg transition"
@@ -89,6 +107,18 @@ export default function Navigation() {
             >
               Sale
             </a>
+            <Link
+              href="/about"
+              className="block text-sm font-light hover:text-muted-foreground py-2"
+            >
+              About
+            </Link>
+            <Link
+              href="/contact"
+              className="block text-sm font-light hover:text-muted-foreground py-2"
+            >
+              Contact
+            </Link>
           </div>
         )}
       </div>
