@@ -50,7 +50,6 @@ export async function GET(
       permissions: user.publicMetadata?.permissions || [],
       customFields: user.publicMetadata?.customFields || {},
 
-      // 账户状态
       banned: user.banned,
       locked: user.locked,
       passwordEnabled: user.passwordEnabled,
@@ -58,7 +57,6 @@ export async function GET(
       totpEnabled: user.totpEnabled,
       backupCodeEnabled: user.backupCodeEnabled,
 
-      // 时间信息
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
       lastSignInAt: user.lastSignInAt,
@@ -77,7 +75,6 @@ export async function GET(
   } catch (error: any) {
     console.error('Error fetching user details:', error);
 
-    // 处理不同类型的错误
     if (error.status === 404) {
       return NextResponse.json(
         {
@@ -112,7 +109,6 @@ export async function GET(
   }
 }
 
-// 可选：添加 PATCH 方法来更新用户的 Public Metadata
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ userId: string }> }
