@@ -21,30 +21,24 @@ export default function Home() {
             Explore our new shopping cart design with complete checkout flow and
             coupon functionality
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/cart"
-              className="inline-flex items-center justify-center px-6 py-3 bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 transition-colors font-medium"
+              className="inline-flex items-center px-6 py-3 bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 transition-colors font-medium"
             >
               View Shopping Cart
             </Link>
             <Link
               href="/checkout/success"
-              className="inline-flex items-center justify-center px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
+              className="inline-flex items-center px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
             >
-              Payment Success Demo
+              View Payment Success
             </Link>
             <Link
-              href="/about"
-              className="inline-flex items-center justify-center px-6 py-3 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/90 transition-colors font-medium"
+              href="/dashboard"
+              className="inline-flex items-center px-6 py-3 bg-secondary text-secondary-foreground border border-border rounded-lg hover:bg-secondary/80 transition-colors font-medium"
             >
-              About Our Brand
-            </Link>
-            <Link
-              href="/contact"
-              className="inline-flex items-center justify-center px-6 py-3 border border-input rounded-lg hover:bg-secondary transition-colors font-medium"
-            >
-              Contact Us
+              View User Dashboard
             </Link>
           </div>
         </div>

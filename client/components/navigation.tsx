@@ -13,48 +13,38 @@ export default function Navigation() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="shrink-0">
-            <h1 className="text-2xl font-light tracking-tight text-foreground">
-              Pearl & Crystal
-            </h1>
+            <Link href="/" className="block">
+              <h1 className="text-2xl font-light tracking-tight text-foreground hover:text-accent transition-colors duration-200">
+                Pearl & Crystal
+              </h1>
+            </Link>
           </div>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <a
-              href="#"
+            <Link
+              href="/products?category=pearls"
               className="text-sm font-light hover:text-muted-foreground transition"
             >
               Pearls
-            </a>
-            <a
-              href="#"
+            </Link>
+            <Link
+              href="/products?category=crystals"
               className="text-sm font-light hover:text-muted-foreground transition"
             >
               Crystals
-            </a>
-            <a
-              href="#"
+            </Link>
+            <Link
+              href="/products?filter=new"
               className="text-sm font-light hover:text-muted-foreground transition"
             >
               New Arrivals
-            </a>
-            <a
-              href="#"
-              className="text-sm font-light hover:text-muted-foreground transition"
-            >
-              Sale
-            </a>
+            </Link>
             <Link
               href="/about"
               className="text-sm font-light hover:text-muted-foreground transition"
             >
               About
-            </Link>
-            <Link
-              href="/contact"
-              className="text-sm font-light hover:text-muted-foreground transition"
-            >
-              Contact
             </Link>
           </div>
 
@@ -83,41 +73,29 @@ export default function Navigation() {
         {/* Mobile Navigation */}
         {isOpen && (
           <div className="md:hidden pb-4 space-y-2 border-t border-border pt-4">
-            <a
-              href="#"
+            <Link
+              href="/products?category=pearls"
               className="block text-sm font-light hover:text-muted-foreground py-2"
             >
               Pearls
-            </a>
-            <a
-              href="#"
+            </Link>
+            <Link
+              href="/products?category=crystals"
               className="block text-sm font-light hover:text-muted-foreground py-2"
             >
               Crystals
-            </a>
-            <a
-              href="#"
+            </Link>
+            <Link
+              href="/products?filter=new"
               className="block text-sm font-light hover:text-muted-foreground py-2"
             >
               New Arrivals
-            </a>
-            <a
-              href="#"
-              className="block text-sm font-light hover:text-muted-foreground py-2"
-            >
-              Sale
-            </a>
+            </Link>
             <Link
               href="/about"
               className="block text-sm font-light hover:text-muted-foreground py-2"
             >
               About
-            </Link>
-            <Link
-              href="/contact"
-              className="block text-sm font-light hover:text-muted-foreground py-2"
-            >
-              Contact
             </Link>
           </div>
         )}
