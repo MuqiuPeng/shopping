@@ -1,4 +1,4 @@
-import CustomerView from '@/features/user/customer/view/customer-view';
+import AdminView from '@/features/user/admin/view/admin-view';
 import React from 'react';
 
 export const metadata = {
@@ -6,7 +6,7 @@ export const metadata = {
 };
 
 const page = () => {
-  return <CustomerView />;
+  return <div>customer view</div>;
 };
 
 export default page;

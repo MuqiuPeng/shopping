@@ -1,4 +1,4 @@
-interface AdminUser {
+interface Customer {
   id: string;
   firstName: string | null;
   lastName: string | null;
@@ -15,12 +15,16 @@ interface AdminUser {
   };
 }
 
-export interface AdminUserResponse {
-  data: AdminUser[];
+export interface CustomerResponse {
+  data: Customer[];
   totalCount: number;
   pagination: {
     limit: number;
     offset: number;
     hasMore: boolean;
   };
+}
+
+export interface UserDetailDialogProp {
+  adminUserId: string;
 }

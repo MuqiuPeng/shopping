@@ -1,0 +1,37 @@
+import { useApi } from '@/hooks/use-api';
+
+export interface AdminListParams {
+  limit?: number;
+  offset?: number;
+  query?: string;
+  orderBy?: string;
+  enabled?: boolean;
+}
+
+export const useAdminList = (params: AdminListParams = {}) => {
+  const {
+    limit = 50,
+    offset = 0,
+    query,
+    orderBy = '-created_at',
+    enabled = true
+  } = params;
+
+  // 构建查询参数
+  const searchParams = new URLSearchParams();
+  searchParams.append('limit', limit.toString());
+  searchParams.append('offset', offset.toString());
+  searchParams.append('orderBy', orderBy);
+
+  if (query && query.trim()) {
+    searchParams.append('query', query.trim());
+  }
+
+  const url = enabled ? `/api/user/admin?${searchParams.toString()}` : null;
+
+  return useApi(url, {
+    revalidateOnMount: true,
+    // 缓存5分钟
+    dedupingInterval: 5 * 60 * 1000
+  });
+};
