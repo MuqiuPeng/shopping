@@ -116,33 +116,6 @@ export const AdminTable = () => {
   const columns = useMemo<ColumnDef<OrganizationMembership>[]>(
     () => [
       {
-        id: 'select',
-        header: ({ table }) => (
-          <Checkbox
-            checked={
-              table.getIsAllPageRowsSelected() ||
-              (table.getIsSomePageRowsSelected() && 'indeterminate')
-            }
-            onCheckedChange={(value) =>
-              table.toggleAllPageRowsSelected(!!value)
-            }
-            aria-label='Select all'
-            className='translate-y-[2px]'
-          />
-        ),
-        cell: ({ row }) => (
-          <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label='Select row'
-            className='translate-y-[2px]'
-          />
-        ),
-        enableSorting: false,
-        enableHiding: false,
-        size: 48
-      },
-      {
         accessorKey: 'publicUserData.imageUrl',
         id: 'avatar',
         header: 'Avatar',
@@ -151,7 +124,7 @@ export const AdminTable = () => {
         cell: ({ row }) => {
           const userData = row.original.publicUserData;
           return (
-            <div className='flex items-center justify-center'>
+            <div className='flex items-center justify-start'>
               {userData?.imageUrl ? (
                 <img
                   src={userData.imageUrl}
@@ -189,46 +162,22 @@ export const AdminTable = () => {
             <IconArrowsSort className='ml-2 h-4 w-4' />
           </Button>
         ),
-        size: 180,
+        size: 200,
         cell: ({ row }) => {
           const userData = row.original.publicUserData;
           return (
-            <div className='space-y-1' style={{ minWidth: '150px' }}>
+            <div className='space-y-1'>
               <div className='font-medium'>
                 {userData?.firstName || userData?.lastName
                   ? `${userData.firstName || ''} ${userData.lastName || ''}`.trim()
                   : 'No name'}
               </div>
               <div className='text-muted-foreground text-xs'>
-                ID: {row.original.id.slice(-8)}
+                {userData?.identifier || 'No email'}
               </div>
             </div>
           );
         }
-      },
-      {
-        accessorKey: 'publicUserData.identifier',
-        id: 'email',
-        header: ({ column }) => (
-          <Button
-            variant='ghost'
-            size='sm'
-            className='-ml-2 h-8'
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Email
-            <IconArrowsSort className='ml-2 h-4 w-4' />
-          </Button>
-        ),
-        size: 220,
-        cell: ({ getValue }) => (
-          <span
-            className='block font-mono text-sm'
-            style={{ minWidth: '180px' }}
-          >
-            {(getValue() as string) || 'No email'}
-          </span>
-        )
       },
       {
         accessorKey: 'organization.name',
@@ -244,14 +193,11 @@ export const AdminTable = () => {
             <IconArrowsSort className='ml-2 h-4 w-4' />
           </Button>
         ),
-        size: 180,
+        size: 200,
         cell: ({ row }) => {
           const orgData = row.original.organization;
           return (
-            <div
-              className='flex items-center gap-2'
-              style={{ minWidth: '150px' }}
-            >
+            <div className='flex items-center gap-2'>
               {orgData?.imageUrl && (
                 <img
                   src={orgData.imageUrl}
@@ -288,22 +234,6 @@ export const AdminTable = () => {
         }
       },
       {
-        accessorKey: 'permissions',
-        header: 'Perms',
-        enableSorting: false,
-        size: 100,
-        cell: ({ getValue }) => {
-          const permissions = getValue() as string[];
-          return (
-            <div className='flex justify-center'>
-              <Badge variant='outline' className='text-xs whitespace-nowrap'>
-                {permissions?.length || 0}
-              </Badge>
-            </div>
-          );
-        }
-      },
-      {
         accessorKey: 'createdAt',
         header: ({ column }) => (
           <Button
@@ -313,26 +243,6 @@ export const AdminTable = () => {
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           >
             Joined
-            <IconArrowsSort className='ml-2 h-4 w-4' />
-          </Button>
-        ),
-        size: 110,
-        cell: ({ getValue }) => (
-          <div className='text-muted-foreground text-center text-sm whitespace-nowrap'>
-            {formatDate(getValue() as number)}
-          </div>
-        )
-      },
-      {
-        accessorKey: 'updatedAt',
-        header: ({ column }) => (
-          <Button
-            variant='ghost'
-            size='sm'
-            className='-ml-2 h-8'
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Updated
             <IconArrowsSort className='ml-2 h-4 w-4' />
           </Button>
         ),
@@ -467,14 +377,15 @@ export const AdminTable = () => {
 
   return (
     <div className='space-y-6'>
-      {/* Search and Controls */}
       <div className='flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between'>
         <div className='flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:gap-3'>
           <Input
-            placeholder='Filter by email...'
-            value={(table.getColumn('email')?.getFilterValue() as string) ?? ''}
+            placeholder='Filter by name or email...'
+            value={
+              (table.getColumn('member')?.getFilterValue() as string) ?? ''
+            }
             onChange={(event) =>
-              table.getColumn('email')?.setFilterValue(event.target.value)
+              table.getColumn('member')?.setFilterValue(event.target.value)
             }
             className='w-full sm:max-w-sm'
           />
@@ -565,7 +476,7 @@ export const AdminTable = () => {
         </div>
         <div className='overflow-hidden rounded-md border'>
           <div className='w-full overflow-x-auto'>
-            <Table className='min-w-max sm:min-w-full'>
+            <Table className='min-w-full'>
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id}>
