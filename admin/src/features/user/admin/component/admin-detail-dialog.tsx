@@ -12,15 +12,8 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
 import { UserDetailDialogProp } from '../types/admin-type';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useUserDetail } from '@/hooks/use-api';
 
 interface UserData {
@@ -41,8 +34,6 @@ interface UserData {
 
 const UserDetailDialog = ({ adminUserId }: UserDetailDialogProp) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<string>('');
-  const [isUpdating, setIsUpdating] = useState(false);
 
   const { data, error, isLoading, refetch } = useUserDetail(
     adminUserId,
@@ -56,52 +47,6 @@ const UserDetailDialog = ({ adminUserId }: UserDetailDialogProp) => {
 
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
-    // 当 dialog 打开时，设置当前角色为默认值
-    if (open && data?.data?.publicMetadata?.role) {
-      setSelectedRole(data.data.publicMetadata.role);
-    }
-  };
-
-  useEffect(() => {
-    if (data?.data?.publicMetadata?.role) {
-      setSelectedRole(data.data.publicMetadata.role);
-    }
-  }, [data?.data?.publicMetadata?.role]);
-
-  const updateUserRole = async (newRole: string) => {
-    try {
-      setIsUpdating(true);
-
-      const response = await fetch(`/api/user/admin/${adminUserId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          publicMetadata: {
-            role: newRole
-          }
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update user role');
-      }
-
-      // 刷新数据
-      await refetch();
-      setSelectedRole(newRole);
-
-      // 简单的成功提示
-      console.log('User role updated successfully');
-    } catch (error) {
-      console.error('Error updating user role:', error);
-      // 恢复到原来的角色
-      setSelectedRole(data?.data?.publicMetadata?.role || '');
-      alert('Failed to update user role. Please try again.');
-    } finally {
-      setIsUpdating(false);
-    }
   };
 
   const getRoleVariant = (role: string) => {
@@ -190,14 +135,10 @@ const UserDetailDialog = ({ adminUserId }: UserDetailDialogProp) => {
                     </h3>
                     <div className='flex items-center gap-1'>
                       <Badge
-                        variant={getRoleVariant(
-                          selectedRole || data.data.publicMetadata?.role
-                        )}
+                        variant={getRoleVariant(data.data.publicMetadata?.role)}
                         className='text-xs font-medium'
                       >
-                        {selectedRole ||
-                          data.data.publicMetadata?.role ||
-                          'User'}
+                        {data.data.publicMetadata?.role || 'User'}
                       </Badge>
                       {data.data.publicMetadata?.isPrimary && (
                         <Badge
@@ -233,24 +174,6 @@ const UserDetailDialog = ({ adminUserId }: UserDetailDialogProp) => {
                   Account Details
                 </h4>
 
-                {/* Primary User Notice */}
-                {data.data.publicMetadata?.isPrimary && (
-                  <div className='rounded-lg border border-amber-200 bg-amber-50 p-3'>
-                    <div className='flex items-start gap-2'>
-                      <div className='mt-0.5 h-4 w-4 rounded-full bg-amber-200' />
-                      <div className='flex-1'>
-                        <p className='text-xs font-medium text-amber-800'>
-                          Primary Account
-                        </p>
-                        <p className='mt-1 text-xs text-amber-700'>
-                          This is a primary account. Role cannot be modified for
-                          security reasons.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
                 <div className='space-y-2'>
                   <div className='bg-muted/30 flex items-center justify-between rounded-md border px-3 py-2'>
                     <span className='text-muted-foreground text-sm'>
@@ -271,44 +194,19 @@ const UserDetailDialog = ({ adminUserId }: UserDetailDialogProp) => {
                   <div className='bg-muted/30 flex items-center justify-between rounded-md border px-3 py-2'>
                     <span className='text-muted-foreground text-sm'>Role</span>
                     <div className='flex items-center gap-2'>
-                      {data.data.publicMetadata?.isPrimary ? (
-                        // Primary 用户显示只读的角色信息
-                        <div className='flex items-center gap-2'>
-                          <span className='text-sm font-medium'>
-                            {selectedRole ||
-                              data.data.publicMetadata?.role ||
-                              'User'}
-                          </span>
-                          <Badge
-                            variant='outline'
-                            className='border-amber-200 bg-amber-50 text-xs text-amber-600'
-                          >
-                            Protected
-                          </Badge>
-                        </div>
-                      ) : (
-                        // 非 Primary 用户显示可编辑的下拉选择
-                        <>
-                          <Select
-                            value={selectedRole}
-                            onValueChange={(value) => {
-                              setSelectedRole(value);
-                              updateUserRole(value);
-                            }}
-                            disabled={isUpdating}
-                          >
-                            <SelectTrigger className='h-8 w-32 text-xs'>
-                              <SelectValue placeholder='Select role' />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value='admin'>Admin</SelectItem>
-                              <SelectItem value='user'>Non-admin</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          {isUpdating && (
-                            <div className='border-primary h-3 w-3 animate-spin rounded-full border border-r-transparent' />
-                          )}
-                        </>
+                      <Badge
+                        variant={getRoleVariant(data.data.publicMetadata?.role)}
+                        className='text-xs font-medium'
+                      >
+                        {data.data.publicMetadata?.role || 'User'}
+                      </Badge>
+                      {data.data.publicMetadata?.isPrimary && (
+                        <Badge
+                          variant='outline'
+                          className='border-amber-200 bg-amber-50 text-xs text-amber-600'
+                        >
+                          Primary
+                        </Badge>
                       )}
                     </div>
                   </div>
