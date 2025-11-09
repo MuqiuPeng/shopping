@@ -117,23 +117,28 @@ const AdminTable = () => {
         id: 'avatar',
         header: 'Avatar',
         enableSorting: false,
+        size: 80,
         cell: ({ row }) => {
           const userData = row.original.publicUserData;
-          return userData?.imageUrl ? (
-            <img
-              src={userData.imageUrl}
-              alt={
-                `${userData.firstName || ''} ${userData.lastName || ''}`.trim() ||
-                'User'
-              }
-              className='h-10 w-10 rounded-full object-cover'
-            />
-          ) : (
-            <div className='bg-muted flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium'>
-              {(
-                (userData?.firstName?.[0] || '') +
-                  (userData?.lastName?.[0] || '') || '?'
-              ).toUpperCase()}
+          return (
+            <div className='flex items-center justify-center'>
+              {userData?.imageUrl ? (
+                <img
+                  src={userData.imageUrl}
+                  alt={
+                    `${userData.firstName || ''} ${userData.lastName || ''}`.trim() ||
+                    'User'
+                  }
+                  className='h-10 w-10 flex-shrink-0 rounded-full object-cover'
+                />
+              ) : (
+                <div className='bg-muted flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-medium'>
+                  {(
+                    (userData?.firstName?.[0] || '') +
+                      (userData?.lastName?.[0] || '') || '?'
+                  ).toUpperCase()}
+                </div>
+              )}
             </div>
           );
         }
@@ -144,10 +149,11 @@ const AdminTable = () => {
           'No name',
         id: 'member',
         header: 'Member',
+        size: 180,
         cell: ({ row }) => {
           const userData = row.original.publicUserData;
           return (
-            <div className='space-y-1'>
+            <div className='space-y-1' style={{ minWidth: '150px' }}>
               <div className='font-medium'>
                 {userData?.firstName || userData?.lastName
                   ? `${userData.firstName || ''} ${userData.lastName || ''}`.trim()
@@ -164,8 +170,12 @@ const AdminTable = () => {
         accessorKey: 'publicUserData.identifier',
         id: 'email',
         header: 'Email',
+        size: 220,
         cell: ({ getValue }) => (
-          <span className='font-mono text-sm break-all'>
+          <span
+            className='block font-mono text-sm'
+            style={{ minWidth: '180px' }}
+          >
             {(getValue() as string) || 'No email'}
           </span>
         )
@@ -174,20 +184,24 @@ const AdminTable = () => {
         accessorKey: 'organization.name',
         id: 'organization',
         header: 'Organization',
+        size: 180,
         cell: ({ row }) => {
           const orgData = row.original.organization;
           return (
-            <div className='flex items-center gap-2'>
+            <div
+              className='flex items-center gap-2'
+              style={{ minWidth: '150px' }}
+            >
               {orgData?.imageUrl && (
                 <img
                   src={orgData.imageUrl}
                   alt={orgData.name}
-                  className='h-6 w-6 rounded'
+                  className='h-6 w-6 flex-shrink-0 rounded'
                 />
               )}
-              <div>
-                <div className='font-medium'>{orgData?.name}</div>
-                <div className='text-muted-foreground text-xs'>
+              <div className='min-w-0'>
+                <div className='truncate font-medium'>{orgData?.name}</div>
+                <div className='text-muted-foreground truncate text-xs'>
                   {orgData?.slug}
                 </div>
               </div>
@@ -198,11 +212,15 @@ const AdminTable = () => {
       {
         accessorKey: 'role',
         header: 'Role',
+        size: 120,
         cell: ({ getValue }) => {
           const role = getValue() as string;
           return (
-            <div className='text-center'>
-              <Badge variant={getRoleVariant(role)} className='capitalize'>
+            <div className='flex justify-center'>
+              <Badge
+                variant={getRoleVariant(role)}
+                className='whitespace-nowrap capitalize'
+              >
                 {getRoleName(role)}
               </Badge>
             </div>
@@ -211,13 +229,14 @@ const AdminTable = () => {
       },
       {
         accessorKey: 'permissions',
-        header: 'Permissions',
+        header: 'Perms',
         enableSorting: false,
+        size: 100,
         cell: ({ getValue }) => {
           const permissions = getValue() as string[];
           return (
-            <div className='text-center'>
-              <Badge variant='outline' className='text-xs'>
+            <div className='flex justify-center'>
+              <Badge variant='outline' className='text-xs whitespace-nowrap'>
                 {permissions?.length || 0}
               </Badge>
             </div>
@@ -227,6 +246,7 @@ const AdminTable = () => {
       {
         accessorKey: 'createdAt',
         header: 'Joined',
+        size: 110,
         cell: ({ getValue }) => (
           <div className='text-muted-foreground text-center text-sm whitespace-nowrap'>
             {formatDate(getValue() as number)}
@@ -235,7 +255,8 @@ const AdminTable = () => {
       },
       {
         accessorKey: 'updatedAt',
-        header: 'Last Updated',
+        header: 'Updated',
+        size: 110,
         cell: ({ getValue }) => (
           <div className='text-muted-foreground text-center text-sm whitespace-nowrap'>
             {formatDate(getValue() as number)}
@@ -246,10 +267,11 @@ const AdminTable = () => {
         id: 'actions',
         header: 'Actions',
         enableSorting: false,
+        size: 100,
         cell: ({ row }) => {
           const userData = row.original.publicUserData;
           return (
-            <div className='text-center'>
+            <div className='flex justify-center'>
               <UserDetailDialog adminUserId={userData?.userId} />
             </div>
           );
@@ -363,8 +385,8 @@ const AdminTable = () => {
     <div className='space-y-6'>
       {/* Search and Controls */}
       <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
-        <div className='flex flex-1 gap-4'>
-          <div className='relative max-w-sm flex-1'>
+        <div className='flex w-full flex-1 gap-4'>
+          <div className='relative w-full flex-1 sm:max-w-sm'>
             <input
               type='text'
               placeholder='Search members...'
@@ -375,7 +397,12 @@ const AdminTable = () => {
           </div>
         </div>
         <div className='flex items-center gap-2'>
-          <Button variant='outline' size='sm' onClick={() => refetch()}>
+          <Button
+            variant='outline'
+            size='sm'
+            onClick={() => refetch()}
+            className='whitespace-nowrap'
+          >
             <IconRefresh className='mr-2 h-4 w-4' />
             Refresh
           </Button>
@@ -383,10 +410,10 @@ const AdminTable = () => {
       </div>
 
       {/* Statistics Cards */}
-      <div className='grid gap-4 md:grid-cols-3'>
+      <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-3'>
         <div className='bg-card rounded-lg border p-4'>
           <div className='flex items-center space-x-2'>
-            <IconUsers className='h-4 w-4 text-blue-600' />
+            <IconUsers className='h-4 w-4 flex-shrink-0 text-blue-600' />
             <span className='text-sm font-medium'>Total Members</span>
           </div>
           <div className='mt-2'>
@@ -399,7 +426,7 @@ const AdminTable = () => {
 
         <div className='bg-card rounded-lg border p-4'>
           <div className='flex items-center space-x-2'>
-            <IconShield className='h-4 w-4 text-amber-600' />
+            <IconShield className='h-4 w-4 flex-shrink-0 text-amber-600' />
             <span className='text-sm font-medium'>Admins</span>
           </div>
           <div className='mt-2'>
@@ -408,9 +435,9 @@ const AdminTable = () => {
           </div>
         </div>
 
-        <div className='bg-card rounded-lg border p-4'>
+        <div className='bg-card rounded-lg border p-4 sm:col-span-2 lg:col-span-1'>
           <div className='flex items-center space-x-2'>
-            <IconUserCheck className='h-4 w-4 text-green-600' />
+            <IconUserCheck className='h-4 w-4 flex-shrink-0 text-green-600' />
             <span className='text-sm font-medium'>Recently Joined</span>
           </div>
           <div className='mt-2'>
@@ -422,76 +449,81 @@ const AdminTable = () => {
 
       {/* Membership Table with TanStack Table */}
       <div className='space-y-4'>
-        <div className='bg-card overflow-x-auto rounded-lg border'>
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHead
-                      key={header.id}
-                      className={
-                        header.column.getCanSort()
-                          ? 'cursor-pointer select-none'
-                          : ''
-                      }
-                      onClick={header.column.getToggleSortingHandler()}
-                    >
-                      <div className='flex items-center gap-2'>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                        {header.column.getCanSort() && (
-                          <span className='text-muted-foreground'>
-                            {header.column.getIsSorted() === 'asc' ? (
-                              <IconArrowUp className='h-4 w-4' />
-                            ) : header.column.getIsSorted() === 'desc' ? (
-                              <IconArrowDown className='h-4 w-4' />
-                            ) : (
-                              <IconArrowsSort className='h-4 w-4' />
-                            )}
-                          </span>
-                        )}
-                      </div>
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className='h-24 text-center'
-                  >
-                    No results found.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
+        <div className='text-muted-foreground block text-center text-xs sm:hidden'>
+          ← Swipe horizontally to view all columns →
+        </div>
+        <div className='bg-card w-full rounded-lg border'>
+          <div className='w-full overflow-x-auto sm:overflow-visible'>
+            <Table className='min-w-max sm:min-w-full'>
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <TableHead
+                        key={header.id}
+                        className={
+                          header.column.getCanSort()
+                            ? 'cursor-pointer whitespace-nowrap select-none'
+                            : 'whitespace-nowrap'
+                        }
+                        onClick={header.column.getToggleSortingHandler()}
+                      >
+                        <div className='flex items-center gap-2'>
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
+                          {header.column.getCanSort() && (
+                            <span className='text-muted-foreground'>
+                              {header.column.getIsSorted() === 'asc' ? (
+                                <IconArrowUp className='h-4 w-4' />
+                              ) : header.column.getIsSorted() === 'desc' ? (
+                                <IconArrowDown className='h-4 w-4' />
+                              ) : (
+                                <IconArrowsSort className='h-4 w-4' />
+                              )}
+                            </span>
+                          )}
+                        </div>
+                      </TableHead>
                     ))}
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={columns.length}
+                      className='h-24 text-center'
+                    >
+                      No results found.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow key={row.id}>
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id} className='whitespace-nowrap'>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </div>
 
         {/* Pagination Controls */}
-        <div className='flex flex-col items-center justify-between gap-4 sm:flex-row'>
-          <div className='text-muted-foreground text-sm'>
+        <div className='flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between'>
+          <div className='text-muted-foreground text-center text-sm lg:text-left'>
             Showing{' '}
             {table.getState().pagination.pageIndex *
               table.getState().pagination.pageSize +
@@ -505,64 +537,70 @@ const AdminTable = () => {
             of {table.getFilteredRowModel().rows.length} results
           </div>
 
-          <div className='flex items-center gap-2'>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={() => table.setPageIndex(0)}
-              disabled={!table.getCanPreviousPage()}
-            >
-              <IconChevronsLeft className='h-4 w-4' />
-            </Button>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-            >
-              <IconChevronLeft className='h-4 w-4' />
-            </Button>
+          <div className='flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-end'>
+            <div className='flex items-center gap-1'>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => table.setPageIndex(0)}
+                disabled={!table.getCanPreviousPage()}
+                className='h-8 w-8 p-0'
+              >
+                <IconChevronsLeft className='h-4 w-4' />
+              </Button>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+                className='h-8 w-8 p-0'
+              >
+                <IconChevronLeft className='h-4 w-4' />
+              </Button>
 
-            <div className='flex items-center gap-2'>
-              <span className='text-sm'>
-                Page {table.getState().pagination.pageIndex + 1} of{' '}
-                {table.getPageCount()}
-              </span>
+              <div className='flex items-center gap-2 px-2'>
+                <span className='text-sm whitespace-nowrap'>
+                  Page {table.getState().pagination.pageIndex + 1} of{' '}
+                  {table.getPageCount()}
+                </span>
+              </div>
+
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+                className='h-8 w-8 p-0'
+              >
+                <IconChevronRight className='h-4 w-4' />
+              </Button>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+                disabled={!table.getCanNextPage()}
+                className='h-8 w-8 p-0'
+              >
+                <IconChevronsRight className='h-4 w-4' />
+              </Button>
             </div>
 
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-            >
-              <IconChevronRight className='h-4 w-4' />
-            </Button>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-              disabled={!table.getCanNextPage()}
-            >
-              <IconChevronsRight className='h-4 w-4' />
-            </Button>
-          </div>
-
-          <div className='flex items-center gap-2'>
-            <span className='text-sm'>Rows per page:</span>
-            <select
-              value={table.getState().pagination.pageSize}
-              onChange={(e) => {
-                table.setPageSize(Number(e.target.value));
-              }}
-              className='border-input bg-background ring-offset-background focus-visible:ring-ring rounded-md border px-2 py-1 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none'
-            >
-              {[5, 10, 20, 30, 50].map((pageSize) => (
-                <option key={pageSize} value={pageSize}>
-                  {pageSize}
-                </option>
-              ))}
-            </select>
+            <div className='flex items-center gap-2'>
+              <span className='text-sm whitespace-nowrap'>Rows per page:</span>
+              <select
+                value={table.getState().pagination.pageSize}
+                onChange={(e) => {
+                  table.setPageSize(Number(e.target.value));
+                }}
+                className='border-input bg-background ring-offset-background focus-visible:ring-ring h-8 rounded-md border px-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none'
+              >
+                {[5, 10, 20, 30, 50].map((pageSize) => (
+                  <option key={pageSize} value={pageSize}>
+                    {pageSize}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
       </div>
@@ -573,7 +611,7 @@ const AdminTable = () => {
 const AdminView = () => {
   return (
     <PageContainer scrollable={false}>
-      <div className='flex flex-1 flex-col space-y-4'>
+      <div className='flex flex-1 flex-col space-y-4 overflow-x-hidden'>
         <div className='flex items-start justify-between'>
           <Heading
             title='Organization Memberships'
