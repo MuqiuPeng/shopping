@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import ProductNotFound from "@/component/product-not-found";
 
 // Sample product data (in real app, this would come from API)
 interface Product {
@@ -149,21 +150,7 @@ export default function ProductDetailPage() {
   }, [productId]);
 
   if (!product) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-light text-foreground mb-4">
-            Product not found
-          </h2>
-          <Link
-            href="/products"
-            className="text-accent hover:text-accent/80 transition-colors"
-          >
-            ← Back to products
-          </Link>
-        </div>
-      </div>
-    );
+    return <ProductNotFound />;
   }
 
   const handleQuantityChange = (change: number) => {
