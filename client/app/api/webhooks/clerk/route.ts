@@ -2,6 +2,7 @@ import { Webhook } from "svix";
 import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(req: Request) {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
@@ -41,23 +42,43 @@ export async function POST(req: Request) {
   }
 
   if (evt.type === "user.created") {
-    const { id } = evt.data;
+    const { id, email_addresses, first_name, last_name, username, image_url } =
+      evt.data;
 
     try {
-      const client = await clerkClient();
+      // 1. 保存用户数据到数据库
+      const user = await prisma.user.create({
+        data: {
+          clerkId: id,
+          email: email_addresses[0]?.email_address ?? "",
+          firstName: first_name ?? null,
+          lastName: last_name ?? null,
+          username: username ?? null,
+          imageUrl: image_url ?? null,
+          role: "customer",
+        },
+      });
 
+      console.log("✅ 用户已保存到数据库:", user.id);
+
+      // 2. 更新 Clerk public metadata
+      const client = await clerkClient();
       await client.users.updateUser(id, {
         publicMetadata: {
           role: "customer",
+          dbId: user.id,
           createdAt: new Date().toISOString(),
         },
       });
 
-      return new Response("Success: User metadata updated", {
+      console.log("✅ Clerk metadata 已更新:", id);
+
+      return new Response("Success: User created and metadata updated", {
         status: 200,
       });
     } catch (error) {
-      return new Response("Error: Failed to update user metadata", {
+      console.error("❌ 创建用户失败:", error);
+      return new Response("Error: Failed to create user", {
         status: 500,
       });
     }

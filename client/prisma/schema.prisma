@@ -1,0 +1,360 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// 用户模型
+// ============================================
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  email     String   @unique
+  firstName String?
+  lastName  String?
+  username  String?
+  imageUrl  String?
+  phone     String?
+  role      String   @default("customer") // customer, admin
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关联关系
+  addresses Address[]
+  orders    Order[]
+  cart      Cart?
+  reviews   Review[]
+  wishlist  WishlistItem[]
+
+  @@index([clerkId])
+  @@index([email])
+  @@map("users")
+}
+
+// ============================================
+// 地址模型
+// ============================================
+model Address {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  fullName     String
+  phone        String
+  addressLine1 String
+  addressLine2 String?
+  city         String
+  state        String?
+  postalCode   String
+  country      String  @default("China")
+  isDefault    Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关联关系
+  orders Order[]
+
+  @@index([userId])
+  @@map("addresses")
+}
+
+// ============================================
+// 分类模型
+// ============================================
+model Category {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  slug        String  @unique
+  description String?
+  imageUrl    String?
+  isActive    Boolean @default(true)
+  sortOrder   Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关联关系
+  products Product[]
+
+  @@index([slug])
+  @@index([isActive])
+  @@map("categories")
+}
+
+// ============================================
+// 产品模型
+// ============================================
+model Product {
+  id             String  @id @default(cuid())
+  name           String
+  slug           String  @unique
+  description    String? @db.Text
+  price          Float
+  compareAtPrice Float? // 原价（用于显示折扣）
+  cost           Float? // 成本价
+
+  sku     String? @unique
+  barcode String?
+
+  // 库存管理
+  trackInventory    Boolean @default(true)
+  inventory         Int     @default(0)
+  lowStockThreshold Int?    @default(5)
+
+  // 分类
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  // 产品属性
+  material String?
+  size     String?
+  color    String?
+  weight   Float? // 重量（克）
+
+  // 状态
+  isActive   Boolean @default(true)
+  isFeatured Boolean @default(false)
+  isNew      Boolean @default(false)
+
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关联关系
+  images        ProductImage[]
+  orderItems    OrderItem[]
+  cartItems     CartItem[]
+  reviews       Review[]
+  wishlistItems WishlistItem[]
+
+  @@index([slug])
+  @@index([categoryId])
+  @@index([isActive])
+  @@index([isFeatured])
+  @@map("products")
+}
+
+// ============================================
+// 产品图片模型
+// ============================================
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  url       String
+  altText   String?
+  sortOrder Int     @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+  @@map("product_images")
+}
+
+// ============================================
+// 购物车模型
+// ============================================
+model Cart {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关联关系
+  items CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  id     String @id @default(cuid())
+  cartId String
+  cart   Cart   @relation(fields: [cartId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  quantity Int @default(1)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cartId, productId]) // 同一购物车中同一产品只能有一条记录
+  @@index([cartId])
+  @@index([productId])
+  @@map("cart_items")
+}
+
+// ============================================
+// 订单模型
+// ============================================
+model Order {
+  id          String @id @default(cuid())
+  orderNumber String @unique // 订单号，如: ORD-20250111-001
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  // 收货地址
+  addressId String?
+  address   Address? @relation(fields: [addressId], references: [id], onDelete: SetNull)
+
+  // 如果地址被删除，保存快照
+  shippingFullName     String
+  shippingPhone        String
+  shippingAddressLine1 String
+  shippingAddressLine2 String?
+  shippingCity         String
+  shippingState        String?
+  shippingPostalCode   String
+  shippingCountry      String
+
+  // 金额
+  subtotal     Float // 商品小计
+  shippingCost Float @default(0) // 运费
+  tax          Float @default(0) // 税费
+  discount     Float @default(0) // 折扣
+  total        Float // 总计
+
+  // 订单状态
+  status        OrderStatus   @default(PENDING)
+  paymentStatus PaymentStatus @default(PENDING)
+  paymentMethod String? // alipay, wechat, card
+
+  // 物流信息
+  trackingNumber String?
+  shippedAt      DateTime?
+  deliveredAt    DateTime?
+
+  // 备注
+  customerNote String?
+  adminNote    String?
+
+  // 取消/退款
+  cancelledAt  DateTime?
+  cancelReason String?
+  refundedAt   DateTime?
+  refundAmount Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关联关系
+  items OrderItem[]
+
+  @@index([userId])
+  @@index([orderNumber])
+  @@index([status])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+// 订单状态枚举
+enum OrderStatus {
+  PENDING // 待付款
+  PROCESSING // 处理中
+  SHIPPED // 已发货
+  DELIVERED // 已送达
+  CANCELLED // 已取消
+  REFUNDED // 已退款
+}
+
+enum PaymentStatus {
+  PENDING // 待付款
+  PAID // 已付款
+  FAILED // 支付失败
+  REFUNDED // 已退款
+}
+
+// ============================================
+// 订单项模型
+// ============================================
+model OrderItem {
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  // 保存下单时的产品信息快照
+  productName  String
+  productSlug  String
+  productImage String?
+
+  quantity Int
+  price    Float // 单价
+  total    Float // 小计
+
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+// ============================================
+// 评论模型
+// ============================================
+model Review {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  rating  Int // 1-5 星
+  title   String?
+  comment String? @db.Text
+
+  isVerifiedPurchase Boolean @default(false) // 是否验证购买
+  isApproved         Boolean @default(false) // 是否审核通过
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([productId])
+  @@index([rating])
+  @@index([isApproved])
+  @@map("reviews")
+}
+
+// ============================================
+// 心愿单模型
+// ============================================
+model WishlistItem {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId]) // 同一用户不能重复添加同一产品
+  @@index([userId])
+  @@index([productId])
+  @@map("wishlist_items")
+}
