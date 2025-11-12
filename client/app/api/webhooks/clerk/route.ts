@@ -46,8 +46,7 @@ export async function POST(req: Request) {
       evt.data;
 
     try {
-      // 1. 保存用户数据到数据库
-      const user = await prisma.user.create({
+      const customer = await prisma.customer.create({
         data: {
           clerkId: id,
           email: email_addresses[0]?.email_address ?? "",
@@ -59,26 +58,21 @@ export async function POST(req: Request) {
         },
       });
 
-      console.log("✅ 用户已保存到数据库:", user.id);
-
-      // 2. 更新 Clerk public metadata
       const client = await clerkClient();
       await client.users.updateUser(id, {
         publicMetadata: {
           role: "customer",
-          dbId: user.id,
+          dbId: customer.id,
           createdAt: new Date().toISOString(),
         },
       });
 
-      console.log("✅ Clerk metadata 已更新:", id);
-
-      return new Response("Success: User created and metadata updated", {
+      return new Response("Success: Customer created and metadata updated", {
         status: 200,
       });
     } catch (error) {
-      console.error("❌ 创建用户失败:", error);
-      return new Response("Error: Failed to create user", {
+      console.error("❌ Error creating customer:", error);
+      return new Response("Error: Failed to create customer", {
         status: 500,
       });
     }

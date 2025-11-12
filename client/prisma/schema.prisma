@@ -14,9 +14,9 @@ datasource db {
 }
 
 // ============================================
-// 用户模型
+// 客户模型
 // ============================================
-model User {
+model Customer {
   id        String   @id @default(cuid())
   clerkId   String   @unique
   email     String   @unique
@@ -38,16 +38,16 @@ model User {
 
   @@index([clerkId])
   @@index([email])
-  @@map("users")
+  @@map("customers")
 }
 
 // ============================================
 // 地址模型
 // ============================================
 model Address {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id         String   @id @default(cuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
   fullName     String
   phone        String
@@ -65,7 +65,7 @@ model Address {
   // 关联关系
   orders Order[]
 
-  @@index([userId])
+  @@index([customerId])
   @@map("addresses")
 }
 
@@ -170,9 +170,9 @@ model ProductImage {
 // 购物车模型
 // ============================================
 model Cart {
-  id     String @id @default(cuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id         String   @id @default(cuid())
+  customerId String   @unique
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -209,8 +209,8 @@ model Order {
   id          String @id @default(cuid())
   orderNumber String @unique // 订单号，如: ORD-20250111-001
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
 
   // 收货地址
   addressId String?
@@ -259,7 +259,7 @@ model Order {
   // 关联关系
   items OrderItem[]
 
-  @@index([userId])
+  @@index([customerId])
   @@index([orderNumber])
   @@index([status])
   @@index([createdAt])
@@ -316,8 +316,8 @@ model OrderItem {
 model Review {
   id String @id @default(cuid())
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -332,7 +332,7 @@ model Review {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([userId])
+  @@index([customerId])
   @@index([productId])
   @@index([rating])
   @@index([isApproved])
@@ -345,16 +345,16 @@ model Review {
 model WishlistItem {
   id String @id @default(cuid())
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 
-  @@unique([userId, productId]) // 同一用户不能重复添加同一产品
-  @@index([userId])
+  @@unique([customerId, productId]) // 同一客户不能重复添加同一产品
+  @@index([customerId])
   @@index([productId])
   @@map("wishlist_items")
 }
