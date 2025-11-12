@@ -1,0 +1,250 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model addresses {
+  id           String    @id
+  fullName     String
+  phone        String
+  addressLine1 String
+  addressLine2 String?
+  city         String
+  state        String?
+  postalCode   String
+  country      String    @default("China")
+  isDefault    Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime
+  customerId   String
+  customers    customers @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  orders       orders[]
+
+  @@index([customerId])
+}
+
+model cart_items {
+  id        String   @id
+  cartId    String
+  productId String
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  carts     carts    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  products  products @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([cartId, productId])
+  @@index([cartId])
+  @@index([productId])
+}
+
+model carts {
+  id         String       @id
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime
+  customerId String       @unique
+  cart_items cart_items[]
+  customers  customers    @relation(fields: [customerId], references: [id], onDelete: Cascade)
+}
+
+model categories {
+  id          String     @id
+  name        String     @unique
+  slug        String     @unique
+  description String?
+  imageUrl    String?
+  isActive    Boolean    @default(true)
+  sortOrder   Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime
+  products    products[]
+
+  @@index([isActive])
+  @@index([slug])
+}
+
+model customers {
+  id             String           @id
+  clerkId        String           @unique
+  email          String           @unique
+  firstName      String?
+  lastName       String?
+  username       String?
+  imageUrl       String?
+  phone          String?
+  role           String           @default("customer")
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime
+  addresses      addresses[]
+  carts          carts?
+  orders         orders[]
+  reviews        reviews[]
+  wishlist_items wishlist_items[]
+
+  @@index([clerkId])
+  @@index([email])
+}
+
+model order_items {
+  id           String   @id
+  orderId      String
+  productId    String
+  productName  String
+  productSlug  String
+  productImage String?
+  quantity     Int
+  price        Float
+  total        Float
+  createdAt    DateTime @default(now())
+  orders       orders   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  products     products @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model orders {
+  id                   String        @id
+  orderNumber          String        @unique
+  addressId            String?
+  shippingFullName     String
+  shippingPhone        String
+  shippingAddressLine1 String
+  shippingAddressLine2 String?
+  shippingCity         String
+  shippingState        String?
+  shippingPostalCode   String
+  shippingCountry      String
+  subtotal             Float
+  shippingCost         Float         @default(0)
+  tax                  Float         @default(0)
+  discount             Float         @default(0)
+  total                Float
+  status               OrderStatus   @default(PENDING)
+  paymentStatus        PaymentStatus @default(PENDING)
+  paymentMethod        String?
+  trackingNumber       String?
+  shippedAt            DateTime?
+  deliveredAt          DateTime?
+  customerNote         String?
+  adminNote            String?
+  cancelledAt          DateTime?
+  cancelReason         String?
+  refundedAt           DateTime?
+  refundAmount         Float?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime
+  customerId           String
+  order_items          order_items[]
+  addresses            addresses?    @relation(fields: [addressId], references: [id])
+  customers            customers     @relation(fields: [customerId], references: [id])
+
+  @@index([createdAt])
+  @@index([customerId])
+  @@index([orderNumber])
+  @@index([status])
+}
+
+model product_images {
+  id        String   @id
+  productId String
+  url       String
+  altText   String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  products  products @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+model products {
+  id                String           @id
+  name              String
+  slug              String           @unique
+  description       String?
+  price             Float
+  compareAtPrice    Float?
+  cost              Float?
+  sku               String?          @unique
+  barcode           String?
+  trackInventory    Boolean          @default(true)
+  inventory         Int              @default(0)
+  lowStockThreshold Int?             @default(5)
+  categoryId        String?
+  material          String?
+  size              String?
+  color             String?
+  weight            Float?
+  isActive          Boolean          @default(true)
+  isFeatured        Boolean          @default(false)
+  isNew             Boolean          @default(false)
+  metaTitle         String?
+  metaDescription   String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime
+  cart_items        cart_items[]
+  order_items       order_items[]
+  product_images    product_images[]
+  categories        categories?      @relation(fields: [categoryId], references: [id])
+  reviews           reviews[]
+  wishlist_items    wishlist_items[]
+
+  @@index([categoryId])
+  @@index([isActive])
+  @@index([isFeatured])
+  @@index([slug])
+}
+
+model reviews {
+  id                 String    @id
+  productId          String
+  rating             Int
+  title              String?
+  comment            String?
+  isVerifiedPurchase Boolean   @default(false)
+  isApproved         Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime
+  customerId         String
+  customers          customers @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  products           products  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
+  @@index([isApproved])
+  @@index([productId])
+  @@index([rating])
+}
+
+model wishlist_items {
+  id         String    @id
+  productId  String
+  createdAt  DateTime  @default(now())
+  customerId String
+  customers  customers @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  products   products  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, productId])
+  @@index([customerId])
+  @@index([productId])
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
