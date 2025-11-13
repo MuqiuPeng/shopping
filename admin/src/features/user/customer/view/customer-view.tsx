@@ -3,8 +3,17 @@ import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
 import { DataTableSkeleton } from '@/components/ui/table/data-table-skeleton';
 import React, { Suspense } from 'react';
+import CustomerTable from '../component/customer-table';
 
-const CustomerView = () => {
+interface CustomerViewProps {
+  searchParams?: {
+    page?: string;
+    pageSize?: string;
+    orderBy?: 'createdAt' | 'email' | 'firstName';
+  };
+}
+
+const CustomerView = ({ searchParams }: CustomerViewProps) => {
   return (
     <PageContainer scrollable={false}>
       <div className='flex flex-1 flex-col space-y-4 overflow-x-hidden'>
@@ -12,11 +21,8 @@ const CustomerView = () => {
           <Heading title=' Customer View' description='Customer Management' />
         </div>
         <Separator />
-        <Suspense
-          fallback={
-            <DataTableSkeleton columnCount={9} rowCount={10} filterCount={0} />
-          }
-        ></Suspense>
+
+        <CustomerTable searchParams={searchParams} />
       </div>
     </PageContainer>
   );

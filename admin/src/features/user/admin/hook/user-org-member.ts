@@ -11,7 +11,7 @@ export interface OrgMemberListParams {
 export const useOrgMemberList = (params: OrgMemberListParams = {}) => {
   const { enabled = true } = params;
 
-  const url = enabled ? `/api/org` : null;
+  const url = enabled ? `/api/clerk/org` : null;
 
   return useApi(url, {
     revalidateOnMount: true,
