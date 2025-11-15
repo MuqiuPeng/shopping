@@ -176,6 +176,11 @@ export function ProductListView() {
     setSelectedProducts(newSelected);
   };
 
+  const handleFilterChange = (filters: typeof localFilters) => {
+    console.log('filter changed');
+    setLocalFilters(filters);
+  };
+
   const isEmpty = filteredProducts.length === 0 && !isLoading;
   const showLoading = isLoading || isRefetching;
 
@@ -185,7 +190,7 @@ export function ProductListView() {
       <div className='flex-shrink-0'>
         <ProductFilters
           filters={localFilters}
-          onFiltersChange={setLocalFilters}
+          onFiltersChange={handleFilterChange}
           productCount={pagination?.total || 0}
         />
       </div>

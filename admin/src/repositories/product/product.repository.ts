@@ -28,18 +28,6 @@ function serializeProduct(product: any) {
   };
 }
 
-/**
- * Get all products with pagination and filters
- * @param page 页码，默认为 1
- * @param pageSize 每页数量，默认为 10
- * @param orderBy 排序字段，默认按创建时间降序
- * @param status 产品状态筛选
- * @param categoryId 分类ID筛选
- * @param isFeatured 是否精选
- * @param isNew 是否新品
- * @param isActive 是否激活
- * @param search 搜索关键词
- */
 export const getAllProducts = async ({
   page = 1,
   pageSize = 10,
@@ -118,11 +106,6 @@ export const getAllProducts = async ({
   }
 };
 
-/**
- * Get product by ID
- * @param id 产品 ID
- * @returns Product 或 null
- */
 export const getProductById = async (id: string) => {
   try {
     const product = await db.products.findUnique({

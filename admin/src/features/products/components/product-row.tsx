@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { MoreHorizontal, Edit, Eye, Copy, Trash2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface Product {
   id: string;
@@ -30,6 +31,13 @@ interface ProductRowProps {
 }
 
 export function ProductRow({ product, isSelected, onSelect }: ProductRowProps) {
+  const router = useRouter();
+
+  // Edit Product button click handler
+  const handleEditProductClicked = () => {
+    router.push(`/dashboard/product/${product.id}/edit`);
+  };
+
   return (
     <tr className='hover:bg-muted transition-colors'>
       <td className='w-12 px-4 py-3'>
@@ -95,7 +103,7 @@ export function ProductRow({ product, isSelected, onSelect }: ProductRowProps) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align='end'>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleEditProductClicked}>
               <Edit className='mr-2 h-4 w-4' />
               Edit Product
             </DropdownMenuItem>
