@@ -3,8 +3,9 @@ import { buttonVariants } from '@/components/ui/button';
 import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
 import { DataTableSkeleton } from '@/components/ui/table/data-table-skeleton';
-import ProductListingPage from '@/features/products/components/product-listing';
-import { searchParamsCache, serialize } from '@/lib/searchparams';
+import { ProductListView } from '@/features/products/view/product-list-view';
+
+import { searchParamsCache } from '@/lib/searchparams';
 import { cn } from '@/lib/utils';
 import { IconPlus } from '@tabler/icons-react';
 import Link from 'next/link';
@@ -28,7 +29,7 @@ export default async function Page(props: pageProps) {
   // const key = serialize({ ...searchParams });
 
   return (
-    <PageContainer scrollable={false}>
+    <PageContainer scrollable={true}>
       <div className='flex flex-1 flex-col space-y-4'>
         <div className='flex items-start justify-between'>
           <Heading
@@ -43,14 +44,7 @@ export default async function Page(props: pageProps) {
           </Link>
         </div>
         <Separator />
-        <Suspense
-          // key={key}
-          fallback={
-            <DataTableSkeleton columnCount={5} rowCount={8} filterCount={2} />
-          }
-        >
-          <ProductListingPage />
-        </Suspense>
+        <ProductListView />
       </div>
     </PageContainer>
   );
