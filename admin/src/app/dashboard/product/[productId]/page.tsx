@@ -12,12 +12,12 @@ type PageProps = { params: Promise<{ productId: string }> };
 
 export default async function Page(props: PageProps) {
   const params = await props.params;
-  console.log('params: ', params);
+  const { productId } = params;
   return (
     <PageContainer scrollable>
       <div className='flex-1 space-y-4'>
         <Suspense fallback={<FormCardSkeleton />}>
-          <ProduceEditorView />
+          <ProduceEditorView productId={productId} />
         </Suspense>
       </div>
     </PageContainer>

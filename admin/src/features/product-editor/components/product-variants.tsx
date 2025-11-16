@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useFieldArray } from 'react-hook-form';
 import {
   Card,
   CardContent,
@@ -11,96 +12,90 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, Edit, Trash2, ChevronDown } from 'lucide-react';
+import { Plus, Trash2, ChevronDown } from 'lucide-react';
+import { useProductForm } from '../context/product-form-context';
 
-interface Variant {
-  id: string;
-  name: string;
-  sku: string;
-  barcode: string;
-  price: number;
-  compareAtPrice: number;
-  cost: number;
-  inventory: number;
-  size?: string;
-  color?: string;
-  isDefault: boolean;
-}
+export default function ProductVariants() {
+  const { form } = useProductForm();
+  const { control, register, setValue, watch } = form;
 
-interface ProductVariantsProps {
-  onChange?: () => void;
-}
-
-export default function ProductVariants({ onChange }: ProductVariantsProps) {
-  const [variants, setVariants] = useState<Variant[]>([
-    {
-      id: '1',
-      name: 'Black - Large',
-      sku: 'WH-BLACK-L',
-      barcode: '123456789012',
-      price: 299.99,
-      compareAtPrice: 399.99,
-      cost: 120,
-      inventory: 45,
-      color: 'Black',
-      size: 'Large',
-      isDefault: true
-    },
-    {
-      id: '2',
-      name: 'Silver - Medium',
-      sku: 'WH-SILVER-M',
-      barcode: '123456789013',
-      price: 299.99,
-      compareAtPrice: 399.99,
-      cost: 120,
-      inventory: 32,
-      color: 'Silver',
-      size: 'Medium',
-      isDefault: false
-    }
-  ]);
+  // Use useFieldArray to manage the variants array
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'variants'
+  });
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
 
-  const handleAddVariant = () => {
-    const newVariant: Variant = {
-      id: Date.now().toString(),
-      name: 'New Variant',
+  // Watch all variants to get their current values
+  const variants = watch('variants');
+
+  const handleAddVariant = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+
+    // Create new variant with default values
+    append({
       sku: '',
-      barcode: '',
+      barcode: null,
+      name: null,
       price: 0,
-      compareAtPrice: 0,
-      cost: 0,
+      compareAtPrice: null,
+      cost: null,
       inventory: 0,
-      isDefault: false
-    };
-    setVariants([...variants, newVariant]);
-    setEditingId(newVariant.id);
-    onChange?.();
+      lowStockThreshold: 5,
+      trackInventory: true,
+      size: null,
+      color: null,
+      material: null,
+      weight: null,
+      attributes: null,
+      isDefault: fields.length === 0, // First variant is default
+      sortOrder: fields.length,
+      isActive: true
+    });
+
+    // Auto-expand the newly created variant
+    setTimeout(() => {
+      if (fields.length >= 0) {
+        setExpandedId(String(fields.length));
+      }
+    }, 0);
   };
 
-  const handleDeleteVariant = (id: string) => {
-    setVariants(variants.filter((v) => v.id !== id));
-    onChange?.();
+  const handleExpandVariant = (
+    e: React.MouseEvent<HTMLButtonElement>,
+    index: number
+  ) => {
+    e.preventDefault();
+    setExpandedId(expandedId === String(index) ? null : String(index));
   };
 
-  const handleUpdateVariant = (id: string, field: string, value: any) => {
-    setVariants(
-      variants.map((v) => (v.id === id ? { ...v, [field]: value } : v))
-    );
-    onChange?.();
+  const handleDeleteVariant = (
+    e: React.MouseEvent<HTMLButtonElement>,
+    index: number
+  ) => {
+    e.preventDefault();
+
+    // If deleting the default variant, set the first remaining variant as default
+    const wasDefault = variants?.[index]?.isDefault;
+    remove(index);
+
+    if (wasDefault && fields.length > 1) {
+      // Set the first remaining variant as default
+      setValue('variants.0.isDefault', true, { shouldDirty: true });
+    }
   };
 
-  const handleSetDefault = (id: string) => {
-    setVariants(
-      variants.map((v) => ({
-        ...v,
-        isDefault: v.id === id
-      }))
-    );
-    onChange?.();
+  const handleSetDefault = (
+    e: React.MouseEvent<HTMLButtonElement>,
+    index: number
+  ) => {
+    e.preventDefault();
+
+    // Set all variants to not default, then set the selected one as default
+    fields.forEach((_, i) => {
+      setValue(`variants.${i}.isDefault`, i === index, { shouldDirty: true });
+    });
   };
 
   return (
@@ -112,169 +107,243 @@ export default function ProductVariants({ onChange }: ProductVariantsProps) {
             SKU, pricing, and inventory management
           </CardDescription>
         </div>
-        <Button onClick={handleAddVariant} size='sm' className='gap-2'>
+        <Button
+          type='button'
+          onClick={handleAddVariant}
+          size='sm'
+          className='gap-2'
+        >
           <Plus className='h-4 w-4' />
           Add Variant
         </Button>
       </CardHeader>
       <CardContent className='space-y-3'>
-        {variants.length === 0 ? (
+        {fields.length === 0 ? (
           <div className='text-muted-foreground py-8 text-center'>
             <p>No variants yet. Add one to get started.</p>
           </div>
         ) : (
           <div className='space-y-2'>
-            {variants.map((variant) => (
-              <div key={variant.id}>
-                <button
-                  onClick={() =>
-                    setExpandedId(expandedId === variant.id ? null : variant.id)
-                  }
-                  className='border-border hover:bg-muted/50 flex w-full items-center justify-between rounded-lg border p-3 text-left transition-colors'
-                >
-                  <div className='flex flex-1 items-center gap-3'>
-                    <ChevronDown
-                      className={`text-muted-foreground h-4 w-4 transition-transform ${
-                        expandedId === variant.id ? 'rotate-180' : ''
-                      }`}
-                    />
-                    <div>
+            {fields.map((field, index) => {
+              const variant = variants?.[index];
+
+              return (
+                <div key={field.id}>
+                  <button
+                    type='button'
+                    onClick={(e) => handleExpandVariant(e, index)}
+                    className='border-border hover:bg-muted/50 flex w-full items-center justify-between rounded-lg border p-3 text-left transition-colors'
+                  >
+                    <div className='flex flex-1 items-center gap-3'>
+                      <ChevronDown
+                        className={`text-muted-foreground h-4 w-4 transition-transform ${
+                          expandedId === String(index) ? 'rotate-180' : ''
+                        }`}
+                      />
+                      <div>
+                        <p className='text-foreground font-medium'>
+                          {variant?.name || 'Unnamed Variant'}
+                          {variant?.isDefault && (
+                            <span className='text-primary ml-2 text-xs'>
+                              (Default)
+                            </span>
+                          )}
+                        </p>
+                        <p className='text-muted-foreground text-sm'>
+                          {variant?.sku || 'No SKU'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className='text-right'>
                       <p className='text-foreground font-medium'>
-                        {variant.name}
+                        ${variant?.price?.toFixed(2) || '0.00'}
                       </p>
                       <p className='text-muted-foreground text-sm'>
-                        {variant.sku}
+                        {variant?.inventory || 0} in stock
                       </p>
                     </div>
-                  </div>
-                  <div className='text-right'>
-                    <p className='text-foreground font-medium'>
-                      ${variant.price.toFixed(2)}
-                    </p>
-                    <p className='text-muted-foreground text-sm'>
-                      {variant.inventory} in stock
-                    </p>
-                  </div>
-                </button>
+                  </button>
 
-                {expandedId === variant.id && (
-                  <div className='bg-muted/50 border-border mt-2 space-y-4 rounded-lg border border-t-0 p-4'>
-                    <div className='grid grid-cols-2 gap-4'>
-                      <div>
-                        <Label className='text-sm'>Name</Label>
-                        <Input
-                          value={variant.name}
-                          onChange={(e) =>
-                            handleUpdateVariant(
-                              variant.id,
-                              'name',
-                              e.target.value
-                            )
-                          }
-                          className='mt-1'
-                        />
+                  {expandedId === String(index) && (
+                    <div className='bg-muted/50 border-border mt-2 space-y-4 rounded-lg border border-t-0 p-4'>
+                      <div className='grid grid-cols-2 gap-4'>
+                        {/* Name */}
+                        <div>
+                          <Label className='text-sm'>Name</Label>
+                          <Input
+                            {...register(`variants.${index}.name`)}
+                            placeholder='e.g., Large - Red'
+                            className='mt-1'
+                          />
+                        </div>
+
+                        {/* SKU */}
+                        <div>
+                          <Label className='text-sm'>
+                            SKU <span className='text-destructive'>*</span>
+                          </Label>
+                          <Input
+                            {...register(`variants.${index}.sku`)}
+                            placeholder='e.g., PROD-001'
+                            className='mt-1'
+                          />
+                        </div>
+
+                        {/* Barcode */}
+                        <div>
+                          <Label className='text-sm'>Barcode</Label>
+                          <Input
+                            {...register(`variants.${index}.barcode`)}
+                            placeholder='e.g., 1234567890123'
+                            className='mt-1'
+                          />
+                        </div>
+
+                        {/* Price */}
+                        <div>
+                          <Label className='text-sm'>
+                            Price <span className='text-destructive'>*</span>
+                          </Label>
+                          <Input
+                            type='number'
+                            step='0.01'
+                            {...register(`variants.${index}.price`, {
+                              valueAsNumber: true
+                            })}
+                            placeholder='0.00'
+                            className='mt-1'
+                          />
+                        </div>
+
+                        {/* Compare At Price */}
+                        <div>
+                          <Label className='text-sm'>Compare At Price</Label>
+                          <Input
+                            type='number'
+                            step='0.01'
+                            {...register(`variants.${index}.compareAtPrice`, {
+                              valueAsNumber: true
+                            })}
+                            placeholder='0.00'
+                            className='mt-1'
+                          />
+                        </div>
+
+                        {/* Cost */}
+                        <div>
+                          <Label className='text-sm'>Cost</Label>
+                          <Input
+                            type='number'
+                            step='0.01'
+                            {...register(`variants.${index}.cost`, {
+                              valueAsNumber: true
+                            })}
+                            placeholder='0.00'
+                            className='mt-1'
+                          />
+                        </div>
+
+                        {/* Inventory */}
+                        <div>
+                          <Label className='text-sm'>Inventory</Label>
+                          <Input
+                            type='number'
+                            {...register(`variants.${index}.inventory`, {
+                              valueAsNumber: true
+                            })}
+                            placeholder='0'
+                            className='mt-1'
+                          />
+                        </div>
+
+                        {/* Low Stock Threshold */}
+                        <div>
+                          <Label className='text-sm'>Low Stock Threshold</Label>
+                          <Input
+                            type='number'
+                            {...register(
+                              `variants.${index}.lowStockThreshold`,
+                              {
+                                valueAsNumber: true
+                              }
+                            )}
+                            placeholder='5'
+                            className='mt-1'
+                          />
+                        </div>
+
+                        {/* Size */}
+                        <div>
+                          <Label className='text-sm'>Size</Label>
+                          <Input
+                            {...register(`variants.${index}.size`)}
+                            placeholder='e.g., S, M, L, XL'
+                            className='mt-1'
+                          />
+                        </div>
+
+                        {/* Color */}
+                        <div>
+                          <Label className='text-sm'>Color</Label>
+                          <Input
+                            {...register(`variants.${index}.color`)}
+                            placeholder='e.g., Red, Blue'
+                            className='mt-1'
+                          />
+                        </div>
+
+                        {/* Material */}
+                        <div>
+                          <Label className='text-sm'>Material</Label>
+                          <Input
+                            {...register(`variants.${index}.material`)}
+                            placeholder='e.g., 和田玉, 翡翠'
+                            className='mt-1'
+                          />
+                        </div>
+
+                        {/* Weight */}
+                        <div>
+                          <Label className='text-sm'>Weight (g)</Label>
+                          <Input
+                            type='number'
+                            step='0.01'
+                            {...register(`variants.${index}.weight`, {
+                              valueAsNumber: true
+                            })}
+                            placeholder='0.00'
+                            className='mt-1'
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <Label className='text-sm'>SKU</Label>
-                        <Input
-                          value={variant.sku}
-                          onChange={(e) =>
-                            handleUpdateVariant(
-                              variant.id,
-                              'sku',
-                              e.target.value
-                            )
-                          }
-                          className='mt-1'
-                        />
-                      </div>
-                      <div>
-                        <Label className='text-sm'>Price</Label>
-                        <Input
-                          type='number'
-                          step='0.01'
-                          value={variant.price}
-                          onChange={(e) =>
-                            handleUpdateVariant(
-                              variant.id,
-                              'price',
-                              parseFloat(e.target.value)
-                            )
-                          }
-                          className='mt-1'
-                        />
-                      </div>
-                      <div>
-                        <Label className='text-sm'>Compare At</Label>
-                        <Input
-                          type='number'
-                          step='0.01'
-                          value={variant.compareAtPrice}
-                          onChange={(e) =>
-                            handleUpdateVariant(
-                              variant.id,
-                              'compareAtPrice',
-                              parseFloat(e.target.value)
-                            )
-                          }
-                          className='mt-1'
-                        />
-                      </div>
-                      <div>
-                        <Label className='text-sm'>Cost</Label>
-                        <Input
-                          type='number'
-                          step='0.01'
-                          value={variant.cost}
-                          onChange={(e) =>
-                            handleUpdateVariant(
-                              variant.id,
-                              'cost',
-                              parseFloat(e.target.value)
-                            )
-                          }
-                          className='mt-1'
-                        />
-                      </div>
-                      <div>
-                        <Label className='text-sm'>Inventory</Label>
-                        <Input
-                          type='number'
-                          value={variant.inventory}
-                          onChange={(e) =>
-                            handleUpdateVariant(
-                              variant.id,
-                              'inventory',
-                              parseInt(e.target.value)
-                            )
-                          }
-                          className='mt-1'
-                        />
+
+                      {/* Actions */}
+                      <div className='flex gap-2 pt-2'>
+                        <Button
+                          type='button'
+                          size='sm'
+                          variant={variant?.isDefault ? 'default' : 'outline'}
+                          onClick={(e) => handleSetDefault(e, index)}
+                        >
+                          {variant?.isDefault ? '✓ Default' : 'Set as Default'}
+                        </Button>
+                        <Button
+                          type='button'
+                          size='sm'
+                          variant='destructive'
+                          onClick={(e) => handleDeleteVariant(e, index)}
+                          className='ml-auto gap-2'
+                          disabled={fields.length === 1}
+                        >
+                          <Trash2 className='h-4 w-4' />
+                          Delete
+                        </Button>
                       </div>
                     </div>
-
-                    <div className='flex gap-2 pt-2'>
-                      <Button
-                        size='sm'
-                        variant={variant.isDefault ? 'default' : 'outline'}
-                        onClick={() => handleSetDefault(variant.id)}
-                      >
-                        {variant.isDefault ? '✓ Default' : 'Set as Default'}
-                      </Button>
-                      <Button
-                        size='sm'
-                        variant='destructive'
-                        onClick={() => handleDeleteVariant(variant.id)}
-                        className='ml-auto gap-2'
-                      >
-                        <Trash2 className='h-4 w-4' />
-                        Delete
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </CardContent>

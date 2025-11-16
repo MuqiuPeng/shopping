@@ -238,22 +238,240 @@ export const createProduct = async (data: CreateProductInput) => {
  */
 export const updateProduct = async (id: string, data: UpdateProductInput) => {
   try {
-    const product = await db.products.update({
-      where: { id },
-      data: {
-        ...data,
-        updatedAt: new Date(),
-        // Auto-set publishedAt when status changes to ACTIVE
-        ...(data.status === ProductStatus.ACTIVE &&
-          !data.publishedAt && { publishedAt: new Date() })
-      },
-      include: {
-        categories: true,
-        variants: true
+    const result = await db.$transaction(async (tx) => {
+      // ========== 1. Update Main Product ==========
+      const product = await tx.products.update({
+        where: { id },
+        data: {
+          name: data.name,
+          slug: data.slug,
+          description: data.description,
+          thumbnail: data.thumbnail,
+          categoryId: data.categoryId,
+          status: data.status,
+          isActive: data.isActive,
+          isFeatured: data.isFeatured,
+          isNew: data.isNew,
+          metaTitle: data.metaTitle,
+          metaDescription: data.metaDescription,
+          publishedAt:
+            data.status === ProductStatus.ACTIVE && !data.publishedAt
+              ? new Date()
+              : data.publishedAt,
+          updatedAt: new Date()
+        }
+      });
+
+      // ========== 2. Handle Variants ==========
+      if (data.variants) {
+        // Get existing variants from DB
+        const existingVariants = await tx.product_variants.findMany({
+          where: { productId: id }
+        });
+
+        const existingIds = existingVariants.map((v) => v.id);
+        const incomingIds = data.variants.filter((v) => v.id).map((v) => v.id!);
+
+        // Delete removed variants
+        const toDelete = existingIds.filter((id) => !incomingIds.includes(id));
+        if (toDelete.length > 0) {
+          await tx.product_variants.deleteMany({
+            where: { id: { in: toDelete } }
+          });
+        }
+
+        // Create or update variants
+        for (const variant of data.variants) {
+          if (variant.id && existingIds.includes(variant.id)) {
+            // Update existing variant
+            await tx.product_variants.update({
+              where: { id: variant.id },
+              data: {
+                name: variant.name,
+                sku: variant.sku,
+                barcode: variant.barcode,
+                price: variant.price,
+                compareAtPrice: variant.compareAtPrice,
+                cost: variant.cost,
+                inventory: variant.inventory,
+                lowStockThreshold: variant.lowStockThreshold,
+                trackInventory: variant.trackInventory,
+                size: variant.size,
+                color: variant.color,
+                material: variant.material,
+                weight: variant.weight,
+                attributes: variant.attributes,
+                isDefault: variant.isDefault,
+                sortOrder: variant.sortOrder,
+                isActive: variant.isActive,
+                updatedAt: new Date()
+              }
+            });
+          } else {
+            // Create new variant
+            await tx.product_variants.create({
+              data: {
+                id: randomUUID(),
+                productId: id,
+                name: variant.name,
+                sku: variant.sku,
+                barcode: variant.barcode,
+                price: variant.price,
+                compareAtPrice: variant.compareAtPrice,
+                cost: variant.cost,
+                inventory: variant.inventory || 0,
+                lowStockThreshold: variant.lowStockThreshold || 5,
+                trackInventory: variant.trackInventory ?? true,
+                size: variant.size,
+                color: variant.color,
+                material: variant.material,
+                weight: variant.weight,
+                attributes: variant.attributes,
+                isDefault: variant.isDefault || false,
+                sortOrder: variant.sortOrder || 0,
+                isActive: variant.isActive ?? true
+              }
+            });
+          }
+        }
       }
+
+      // ========== 3. Handle Product Images ==========
+      if (data.product_images) {
+        const existingImages = await tx.product_images.findMany({
+          where: { productId: id }
+        });
+
+        const existingIds = existingImages.map((img) => img.id);
+        const incomingIds = data.product_images
+          .filter((img) => img.id)
+          .map((img) => img.id!);
+
+        // Delete removed images
+        const toDelete = existingIds.filter((id) => !incomingIds.includes(id));
+        if (toDelete.length > 0) {
+          await tx.product_images.deleteMany({
+            where: { id: { in: toDelete } }
+          });
+        }
+
+        // Create or update images
+        for (const image of data.product_images) {
+          if (image.id && existingIds.includes(image.id)) {
+            // Update existing image
+            await tx.product_images.update({
+              where: { id: image.id },
+              data: {
+                url: image.url,
+                altText: image.altText,
+                sortOrder: image.sortOrder
+              }
+            });
+          } else {
+            // Create new image
+            await tx.product_images.create({
+              data: {
+                id: randomUUID(),
+                productId: id,
+                url: image.url,
+                altText: image.altText,
+                sortOrder: image.sortOrder || 0
+              }
+            });
+          }
+        }
+      }
+
+      // ========== 4. Handle Tags (Many-to-Many) ==========
+      if (data.tagIds) {
+        // Delete all existing associations
+        await tx.product_tags.deleteMany({
+          where: { productId: id }
+        });
+
+        // Create new associations
+        if (data.tagIds.length > 0) {
+          await tx.product_tags.createMany({
+            data: data.tagIds.map((tagId) => ({
+              id: randomUUID(),
+              productId: id,
+              tagId
+            }))
+          });
+        }
+      }
+
+      // ========== 5. Handle FAQs ==========
+      if (data.product_faqs) {
+        const existingFaqs = await tx.product_faqs.findMany({
+          where: { productId: id }
+        });
+
+        const existingIds = existingFaqs.map((faq) => faq.id);
+        const incomingIds = data.product_faqs
+          .filter((faq) => faq.id)
+          .map((faq) => faq.id!);
+
+        // Delete removed FAQs
+        const toDelete = existingIds.filter((id) => !incomingIds.includes(id));
+        if (toDelete.length > 0) {
+          await tx.product_faqs.deleteMany({
+            where: { id: { in: toDelete } }
+          });
+        }
+
+        // Create or update FAQs
+        for (const faq of data.product_faqs) {
+          if (faq.id && existingIds.includes(faq.id)) {
+            // Update existing FAQ
+            await tx.product_faqs.update({
+              where: { id: faq.id },
+              data: {
+                question: faq.question,
+                answer: faq.answer,
+                isActive: faq.isActive ?? true,
+                sortOrder: faq.sortOrder || 0,
+                updatedAt: new Date()
+              }
+            });
+          } else {
+            // Create new FAQ
+            await tx.product_faqs.create({
+              data: {
+                id: randomUUID(),
+                productId: id,
+                question: faq.question,
+                answer: faq.answer,
+                isActive: faq.isActive ?? true,
+                sortOrder: faq.sortOrder || 0
+              }
+            });
+          }
+        }
+      }
+
+      // Return updated product with all relations
+      return await tx.products.findUnique({
+        where: { id },
+        include: {
+          categories: true,
+          variants: {
+            orderBy: { sortOrder: 'asc' }
+          },
+          product_images: {
+            orderBy: { sortOrder: 'asc' }
+          },
+          product_tags: {
+            include: { tags: true }
+          },
+          product_faqs: {
+            orderBy: { sortOrder: 'asc' }
+          }
+        }
+      });
     });
 
-    return serializeProduct(product);
+    return result ? serializeProduct(result) : null;
   } catch (error) {
     throw handleError(error);
   }

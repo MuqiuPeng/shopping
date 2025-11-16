@@ -1,7 +1,10 @@
 'use client';
 
-import { useState } from 'react';
-import { Save, X } from 'lucide-react';
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Save } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import ProductBasicInfo from './product-basic-info';
 import ProductImages from './product-images';
@@ -11,6 +14,12 @@ import ProductSEO from './product-seo';
 import PublishSection from './publish-section';
 import ProductNotFound from './product-not-found';
 import { useProductData } from '../hooks/use-product-data';
+import { productFormSchema, ProductFormData } from '../schemas/product-schema';
+import { ProductFormProvider } from '../context/product-form-context';
+import { ProductStatus } from '@prisma/client';
+import { getErrorMessage } from '../utils/product-error-handler';
+import { onToast, onToastError } from '@/lib/toast';
+import useUpdateProductData from '../hooks/use-update-product-data';
 
 interface ProductEditorProps {
   productId: string;
@@ -19,69 +28,149 @@ interface ProductEditorProps {
 export default function ProductEditor(props: ProductEditorProps) {
   const { productId } = props;
 
-  const [isSaving, setIsSaving] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false);
+  const { data: product, error, isLoading } = useProductData(productId);
+  const { updateProduct } = useUpdateProductData({ productId });
 
-  const { data, error, isLoading, mutate } = useProductData(productId);
-  console.log('data: ', JSON.stringify(data, null, 2));
+  // Initialize form with default values
+  const form = useForm<ProductFormData>({
+    resolver: zodResolver(productFormSchema),
+    defaultValues: {
+      name: '',
+      slug: '',
+      description: '',
+      shortDescription: '',
+      status: ProductStatus.DRAFT,
+      isActive: true,
+      isFeatured: false,
+      isNew: false,
+      product_images: [],
+      variants: [],
+      product_faqs: [],
+      tagIds: []
+    }
+  });
 
-  const handleSave = async () => {
-    setIsSaving(true);
-    // Simulate save
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsSaving(false);
-    setHasChanges(false);
+  // Update form when product data loads
+  useEffect(() => {
+    if (product) {
+      form.reset({
+        name: product.name || '',
+        slug: product.slug || '',
+        description: product.description || '',
+        shortDescription: product.shortDescription || '',
+        categoryId: product.categoryId || null,
+        brandId: product.brandId || null,
+        status: product.status || ProductStatus.DRAFT,
+        isActive: product.isActive ?? true,
+        isFeatured: product.isFeatured ?? false,
+        isNew: product.isNew ?? false,
+        thumbnail: product.thumbnail || null,
+        videoUrl: product.videoUrl || null,
+        product_images: product.product_images || [],
+        variants: product.variants || [],
+        metaTitle: product.metaTitle || '',
+        metaDescription: product.metaDescription || '',
+        metaKeywords: product.metaKeywords || '',
+        product_faqs: product.product_faqs || [],
+        tagIds: product.product_tags?.map((pt: any) => pt.tagId) || []
+      });
+    }
+  }, [product, form]);
+
+  const onSubmit = async (data: ProductFormData) => {
+    await updateProduct(data);
+
+    onToast(
+      'Product saved successfully!',
+      'Failed to save product. Please try again.'
+    );
   };
+
+  const onError = (errors: any) => {
+    const firstErrorField = Object.keys(errors)[0];
+    const firstError = errors[firstErrorField];
+
+    if (firstError) {
+      const fieldName = getErrorMessage(firstErrorField);
+      const errorMessage = firstError.message || 'Invalid input';
+
+      onToastError('Please check the form', `${fieldName}: ${errorMessage}`);
+    } else {
+      onToastError('Please check the form for errors');
+    }
+  };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className='flex min-h-screen items-center justify-center'>
+        <div className='text-muted-foreground'>Loading product...</div>
+      </div>
+    );
+  }
+
+  // Error/Not found
+  if (error || !product) return <ProductNotFound productId={productId} />;
 
   if (!productId) return <ProductNotFound />;
 
+  const { isDirty, isSubmitting } = form.formState;
+
   return (
-    <div className='w-full'>
-      {/* Header */}
-      <div className='border-border bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40 border-b backdrop-blur'>
-        <div className='flex items-center justify-between px-6 py-4'>
-          <div>
-            <h1 className='text-foreground text-2xl font-semibold'>
-              Product Editor
-            </h1>
-            <p className='text-muted-foreground mt-1 text-sm'>
-              Manage your product details and inventory
-            </p>
+    <ProductFormProvider
+      value={{
+        form,
+        isSubmitting,
+        isDirty
+      }}
+    >
+      <form onSubmit={form.handleSubmit(onSubmit, onError)} className='w-full'>
+        {/* Header */}
+        <div className='border-border bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40 border-b backdrop-blur'>
+          <div className='flex items-center justify-between px-6 py-4'>
+            <div>
+              <h1 className='text-foreground text-2xl font-semibold'>
+                Product Editor
+              </h1>
+              <p className='text-muted-foreground mt-1 text-sm'>
+                Manage your product details and inventory
+              </p>
+            </div>
+            <div className='flex items-center gap-3'>
+              {isDirty && (
+                <span className='text-sm text-amber-600 dark:text-amber-400'>
+                  Unsaved changes
+                </span>
+              )}
+              <Button
+                type='submit'
+                disabled={!isDirty || isSubmitting}
+                className='gap-2'
+              >
+                <Save className='h-4 w-4' />
+                {isSubmitting ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
           </div>
-          <div className='flex items-center gap-3'>
-            {hasChanges && (
-              <span className='text-sm text-amber-600 dark:text-amber-400'>
-                Unsaved changes
-              </span>
-            )}
-            <Button
-              onClick={handleSave}
-              disabled={!hasChanges || isSaving}
-              className='gap-2'
-            >
-              <Save className='h-4 w-4' />
-              {isSaving ? 'Saving...' : 'Save Changes'}
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className='max-w-10xl mx-auto grid grid-cols-1 gap-6 p-6 lg:grid-cols-3'>
-        {/* Left Column - Main Sections */}
-        <div className='space-y-6 lg:col-span-2'>
-          <ProductBasicInfo onChange={() => setHasChanges(true)} />
-          <ProductImages onChange={() => setHasChanges(true)} />
-          <ProductVariants onChange={() => setHasChanges(true)} />
-          <ProductSEO onChange={() => setHasChanges(true)} />
         </div>
 
-        {/* Right Column - Sidebar */}
-        <div className='space-y-6'>
-          <ProductMetadata onChange={() => setHasChanges(true)} />
-          <PublishSection onChange={() => setHasChanges(true)} />
+        {/* Main Content */}
+        <div className='max-w-10xl mx-auto grid grid-cols-1 gap-6 p-6 lg:grid-cols-3'>
+          {/* Left Column - Main Sections */}
+          <div className='space-y-6 lg:col-span-2'>
+            <ProductBasicInfo />
+            <ProductImages />
+            <ProductVariants />
+            <ProductSEO />
+          </div>
+
+          {/* Right Column - Sidebar */}
+          <div className='space-y-6'>
+            <ProductMetadata />
+            <PublishSection />
+          </div>
         </div>
-      </div>
-    </div>
+      </form>
+    </ProductFormProvider>
   );
 }

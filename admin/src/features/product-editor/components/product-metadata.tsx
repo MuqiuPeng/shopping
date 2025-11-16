@@ -12,49 +12,33 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, X } from 'lucide-react';
+import { useProductForm } from '../context/product-form-context';
 
-interface ProductMetadataProps {
-  onChange?: () => void;
-}
+export default function ProductMetadata() {
+  const { form } = useProductForm();
+  const { register, setValue, watch } = form;
 
-export default function ProductMetadata({ onChange }: ProductMetadataProps) {
-  const [categories, setCategories] = useState<string[]>([
-    'Electronics',
-    'Audio'
-  ]);
-  const [tags, setTags] = useState<string[]>([
-    'headphones',
-    'wireless',
-    'premium'
-  ]);
-  const [newCategory, setNewCategory] = useState('');
+  const tagIds = watch('tagIds') || [];
+  const isFeatured = watch('isFeatured');
+  const isNew = watch('isNew');
+
   const [newTag, setNewTag] = useState('');
 
-  const handleAddCategory = () => {
-    if (newCategory.trim() && !categories.includes(newCategory)) {
-      setCategories([...categories, newCategory]);
-      setNewCategory('');
-      onChange?.();
-    }
-  };
-
-  const handleRemoveCategory = (cat: string) => {
-    setCategories(categories.filter((c) => c !== cat));
-    onChange?.();
-  };
-
   const handleAddTag = () => {
-    if (newTag.trim() && !tags.includes(newTag)) {
-      setTags([...tags, newTag]);
+    if (newTag.trim() && !tagIds.includes(newTag)) {
+      setValue('tagIds', [...tagIds, newTag], { shouldDirty: true });
       setNewTag('');
-      onChange?.();
     }
   };
 
   const handleRemoveTag = (tag: string) => {
-    setTags(tags.filter((t) => t !== tag));
-    onChange?.();
+    setValue(
+      'tagIds',
+      tagIds.filter((t: string) => t !== tag),
+      { shouldDirty: true }
+    );
   };
 
   return (
@@ -64,39 +48,20 @@ export default function ProductMetadata({ onChange }: ProductMetadataProps) {
         <CardDescription>Categories and tags</CardDescription>
       </CardHeader>
       <CardContent className='space-y-6'>
-        {/* Categories */}
-        <div className='space-y-3'>
-          <Label className='text-sm font-medium'>Categories</Label>
-          <div className='flex gap-2'>
-            <Input
-              value={newCategory}
-              onChange={(e) => setNewCategory(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleAddCategory()}
-              placeholder='Add category'
-              className='text-sm'
-            />
-            <Button
-              onClick={handleAddCategory}
-              size='sm'
-              variant='outline'
-              className='gap-1'
-            >
-              <Plus className='h-4 w-4' />
-            </Button>
-          </div>
-          <div className='flex flex-wrap gap-2'>
-            {categories.map((cat) => (
-              <Badge key={cat} variant='secondary' className='gap-2 pl-2'>
-                {cat}
-                <button
-                  onClick={() => handleRemoveCategory(cat)}
-                  className='hover:text-destructive'
-                >
-                  <X className='h-3 w-3' />
-                </button>
-              </Badge>
-            ))}
-          </div>
+        {/* Category - Single select for now */}
+        <div className='space-y-2'>
+          <Label htmlFor='categoryId' className='text-sm font-medium'>
+            Category
+          </Label>
+          <Input
+            id='categoryId'
+            {...register('categoryId')}
+            placeholder='Enter category ID'
+            className='text-sm'
+          />
+          <p className='text-muted-foreground text-xs'>
+            Category ID (will be replaced with select later)
+          </p>
         </div>
 
         {/* Tags */}
@@ -106,11 +71,14 @@ export default function ProductMetadata({ onChange }: ProductMetadataProps) {
             <Input
               value={newTag}
               onChange={(e) => setNewTag(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleAddTag()}
-              placeholder='Add tag'
+              onKeyPress={(e) =>
+                e.key === 'Enter' && (e.preventDefault(), handleAddTag())
+              }
+              placeholder='Add tag ID'
               className='text-sm'
             />
             <Button
+              type='button'
               onClick={handleAddTag}
               size='sm'
               variant='outline'
@@ -120,10 +88,11 @@ export default function ProductMetadata({ onChange }: ProductMetadataProps) {
             </Button>
           </div>
           <div className='flex flex-wrap gap-2'>
-            {tags.map((tag) => (
+            {tagIds.map((tag: string) => (
               <Badge key={tag} variant='outline' className='gap-2 pl-2'>
                 {tag}
                 <button
+                  type='button'
                   onClick={() => handleRemoveTag(tag)}
                   className='hover:text-destructive'
                 >
@@ -137,27 +106,37 @@ export default function ProductMetadata({ onChange }: ProductMetadataProps) {
         {/* Flags */}
         <div className='space-y-3'>
           <Label className='text-sm font-medium'>Product Flags</Label>
-          <div className='space-y-2'>
-            <label className='flex cursor-pointer items-center gap-3'>
-              <input
-                type='checkbox'
-                defaultChecked
-                className='h-4 w-4 rounded'
+          <div className='space-y-3'>
+            <div className='flex items-center space-x-2'>
+              <Checkbox
+                id='isFeatured'
+                checked={isFeatured}
+                onCheckedChange={(checked) =>
+                  setValue('isFeatured', !!checked, { shouldDirty: true })
+                }
               />
-              <span className='text-sm'>Featured Product</span>
-            </label>
-            <label className='flex cursor-pointer items-center gap-3'>
-              <input
-                type='checkbox'
-                defaultChecked
-                className='h-4 w-4 rounded'
+              <label
+                htmlFor='isFeatured'
+                className='text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
+              >
+                Featured Product
+              </label>
+            </div>
+            <div className='flex items-center space-x-2'>
+              <Checkbox
+                id='isNew'
+                checked={isNew}
+                onCheckedChange={(checked) =>
+                  setValue('isNew', !!checked, { shouldDirty: true })
+                }
               />
-              <span className='text-sm'>New Arrival</span>
-            </label>
-            <label className='flex cursor-pointer items-center gap-3'>
-              <input type='checkbox' className='h-4 w-4 rounded' />
-              <span className='text-sm'>On Sale</span>
-            </label>
+              <label
+                htmlFor='isNew'
+                className='text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
+              >
+                New Arrival
+              </label>
+            </div>
           </div>
         </div>
       </CardContent>

@@ -45,7 +45,8 @@ export default function ProductImages({ onChange }: ProductImagesProps) {
 
   const [draggedId, setDraggedId] = useState<string | null>(null);
 
-  const handleImageUpload = () => {
+  const handleImageUpload = (e: React.FormEvent) => {
+    e.preventDefault();
     const newImage: ProductImage = {
       id: Date.now().toString(),
       url: '/generic-product-display.png',
