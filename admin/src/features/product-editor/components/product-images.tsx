@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { toast } from 'sonner';
 import {
   Card,
   CardContent,
@@ -12,13 +13,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Upload, X, GripVertical, Star } from 'lucide-react';
+import { onToast, onToastError } from '@/lib/toast';
+import { useProductForm } from '../context/product-form-context';
+import { useConfirmDialog } from '@/components/confirm-dialog-provider';
 
 interface ProductImage {
-  id: string;
+  id?: string;
+  productId?: string;
   url: string;
-  altText: string;
+  publicId?: string | null; // ✅ 添加 publicId
+  isCover: boolean;
+  altText: string | null;
   sortOrder: number;
-  isCover?: boolean;
+  createdAt?: Date;
 }
 
 interface ProductImagesProps {
@@ -26,45 +33,103 @@ interface ProductImagesProps {
 }
 
 export default function ProductImages({ onChange }: ProductImagesProps) {
-  const [images, setImages] = useState<ProductImage[]>([
-    {
-      id: '1',
-      url: '/premium-headphones.jpg',
-      altText: 'Premium headphones front view',
-      sortOrder: 0,
-      isCover: true
-    },
-    {
-      id: '2',
-      url: '/headphones-side.jpg',
-      altText: 'Headphones side view',
-      sortOrder: 1,
-      isCover: false
-    }
-  ]);
+  const { form } = useProductForm();
+  const { confirm } = useConfirmDialog();
+  const { watch, setValue } = form;
+
+  const productImages = watch('product_images') || [];
+  console.log('productImages: ', productImages);
 
   const [draggedId, setDraggedId] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
-  const handleImageUpload = (e: React.FormEvent) => {
-    e.preventDefault();
-    const newImage: ProductImage = {
-      id: Date.now().toString(),
-      url: '/generic-product-display.png',
-      altText: '',
-      sortOrder: images.length,
-      isCover: false
-    };
-    setImages([...images, newImage]);
-    onChange?.();
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploading(true);
+
+    try {
+      const uploadPromises = Array.from(files).map(async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) {
+          throw new Error('Upload failed');
+        }
+
+        const data = await response.json();
+        return data;
+      });
+
+      const results = await Promise.all(uploadPromises);
+
+      const newImages: ProductImage[] = results.map((result, index) => ({
+        url: result.url,
+        publicId: result.publicId, // ✅ 保存 publicId
+        altText: null,
+        sortOrder: productImages.length + index,
+        isCover: productImages.length === 0 && index === 0 // ✅ 第一张自动设为封面
+      }));
+
+      const updatedImages = [...productImages, ...newImages];
+      setValue('product_images', updatedImages, { shouldDirty: true });
+      onChange?.();
+
+      onToast('Images uploaded successfully!');
+    } catch (error) {
+      onToastError('Failed to upload images');
+
+      console.error('Upload error:', error);
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
   };
 
   const handleAltTextChange = (id: string, altText: string) => {
-    setImages(images.map((img) => (img.id === id ? { ...img, altText } : img)));
+    const updatedImages = productImages.map((img) =>
+      img.id === id ? { ...img, altText } : img
+    );
+    setValue('product_images', updatedImages, { shouldDirty: true });
     onChange?.();
   };
 
-  const handleRemoveImage = (id: string) => {
-    setImages(images.filter((img) => img.id !== id));
+  const handleDrop = (targetId: string) => {
+    if (!draggedId || draggedId === targetId) return;
+
+    const draggedIndex = productImages.findIndex((img) => img.id === draggedId);
+    const targetIndex = productImages.findIndex((img) => img.id === targetId);
+
+    const newImages = [...productImages];
+    const [removed] = newImages.splice(draggedIndex, 1);
+    newImages.splice(targetIndex, 0, removed);
+
+    // ✅ 更新 sortOrder
+    newImages.forEach((img, i) => {
+      img.sortOrder = i;
+    });
+
+    // ✅ 更新 form 数据
+    setValue('product_images', newImages, { shouldDirty: true });
+    setDraggedId(null);
+    onChange?.();
+  };
+
+  const handleSetCoverImage = (id: string) => {
+    const updatedImages = productImages.map((img) => ({
+      ...img,
+      isCover: img.id === id
+    }));
+    setValue('product_images', updatedImages, { shouldDirty: true });
     onChange?.();
   };
 
@@ -76,30 +141,63 @@ export default function ProductImages({ onChange }: ProductImagesProps) {
     e.preventDefault();
   };
 
-  const handleDrop = (targetId: string) => {
-    if (!draggedId || draggedId === targetId) return;
-
-    const draggedIndex = images.findIndex((img) => img.id === draggedId);
-    const targetIndex = images.findIndex((img) => img.id === targetId);
-
-    const newImages = [...images];
-    const [removed] = newImages.splice(draggedIndex, 1);
-    newImages.splice(targetIndex, 0, removed);
-    newImages.forEach((img, i) => (img.sortOrder = i));
-
-    setImages(newImages);
-    setDraggedId(null);
-    onChange?.();
+  const handleButtonClick = () => {
+    fileInputRef.current?.click();
   };
 
-  const handleSetCoverImage = (id: string) => {
-    setImages(
-      images.map((img) => ({
-        ...img,
-        isCover: img.id === id
-      }))
+  const handleRemoveImage = (imageId: string) => {
+    const imageToDelete = productImages.find((img) => img.id === imageId);
+
+    confirm(
+      async () => {
+        if (imageToDelete?.publicId) {
+          try {
+            const response = await fetch('/api/upload/delete', {
+              method: 'DELETE',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ publicId: imageToDelete.publicId })
+            });
+
+            if (!response.ok) {
+              throw new Error('Failed to delete from Cloudinary');
+            }
+          } catch (error) {
+            console.error('Cloudinary delete error:', error);
+            toast.error('Failed to delete image from cloud storage', {
+              style: {
+                background: 'oklch(0.577 0.245 27.325)',
+                color: 'white',
+                border: '1px solid oklch(0.577 0.245 27.325)'
+              }
+            });
+            return;
+          }
+        }
+
+        // 从表单中删除
+        const updatedImages = productImages.filter((img) => img.id !== imageId);
+        setValue('product_images', updatedImages, { shouldDirty: true });
+        onChange?.();
+
+        toast.success('Image deleted successfully', {
+          style: {
+            background: 'var(--primary)',
+            color: 'var(--primary-foreground)',
+            border: '1px solid var(--primary)'
+          }
+        });
+      },
+      {
+        title: 'Delete Image?',
+        description:
+          'Are you sure you want to delete this image? This action cannot be undone.',
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+        variant: 'destructive'
+      }
     );
-    onChange?.();
   };
 
   return (
@@ -111,23 +209,32 @@ export default function ProductImages({ onChange }: ProductImagesProps) {
         </CardDescription>
       </CardHeader>
       <CardContent className='space-y-4'>
+        <input
+          ref={fileInputRef}
+          type='file'
+          accept='image/*'
+          multiple
+          onChange={handleImageUpload}
+          className='hidden'
+        />
         <Button
-          onClick={handleImageUpload}
+          onClick={handleButtonClick}
           variant='outline'
           className='w-full gap-2'
+          disabled={isUploading}
         >
           <Upload className='h-4 w-4' />
-          Add Image
+          {isUploading ? 'Uploading...' : 'Add Image'}
         </Button>
 
         <div className='grid grid-cols-2 gap-4 md:grid-cols-3'>
-          {images.map((image, index) => (
+          {productImages.map((image, index) => (
             <div
               key={image.id}
               draggable
-              onDragStart={() => handleDragStart(image.id)}
+              onDragStart={() => handleDragStart(image.id!)}
               onDragOver={handleDragOver}
-              onDrop={() => handleDrop(image.id)}
+              onDrop={() => handleDrop(image.id!)}
               className='group bg-muted relative cursor-grab overflow-hidden rounded-lg transition-all hover:shadow-md active:cursor-grabbing'
             >
               {image.isCover && (
@@ -140,7 +247,7 @@ export default function ProductImages({ onChange }: ProductImagesProps) {
               <div className='bg-muted flex aspect-square items-center justify-center overflow-hidden'>
                 <img
                   src={image.url || '/placeholder.svg'}
-                  alt={image.altText}
+                  alt={image.altText || 'Image preview'}
                   className='h-full w-full object-cover'
                 />
               </div>
@@ -149,7 +256,7 @@ export default function ProductImages({ onChange }: ProductImagesProps) {
                 <GripVertical className='h-4 w-4 text-white' />
                 {!image.isCover && (
                   <button
-                    onClick={() => handleSetCoverImage(image.id)}
+                    onClick={() => handleSetCoverImage(image.id!)}
                     className='rounded bg-amber-500 px-2 py-1 text-xs font-medium text-white transition-colors hover:bg-amber-600'
                   >
                     Set as Cover
@@ -158,7 +265,11 @@ export default function ProductImages({ onChange }: ProductImagesProps) {
               </div>
 
               <button
-                onClick={() => handleRemoveImage(image.id)}
+                onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleRemoveImage(image.id!);
+                }}
                 className='bg-destructive hover:bg-destructive/90 absolute top-2 right-2 rounded-md p-1 text-white opacity-0 transition-opacity group-hover:opacity-100'
               >
                 <X className='h-4 w-4' />
@@ -173,17 +284,17 @@ export default function ProductImages({ onChange }: ProductImagesProps) {
           ))}
         </div>
 
-        {images.length > 0 && (
+        {productImages.length > 0 && (
           <div className='space-y-4 border-t pt-4'>
             <div>
               <Label className='text-sm font-medium'>Edit Alt Text</Label>
               <div className='mt-2 max-h-64 space-y-2 overflow-y-auto'>
-                {images.map((image) => (
+                {productImages.map((image) => (
                   <div key={image.id} className='flex items-start gap-2'>
                     <div className='relative flex-shrink-0'>
                       <img
                         src={image.url || '/placeholder.svg'}
-                        alt={image.altText}
+                        alt={image.altText || 'Image preview'}
                         className='h-10 w-10 rounded object-cover'
                       />
                       {image.isCover && (
@@ -193,9 +304,9 @@ export default function ProductImages({ onChange }: ProductImagesProps) {
                       )}
                     </div>
                     <Input
-                      value={image.altText}
+                      value={image.altText || 'Image description'}
                       onChange={(e) =>
-                        handleAltTextChange(image.id, e.target.value)
+                        handleAltTextChange(image.id!, e.target.value)
                       }
                       placeholder='Describe the image...'
                       className='flex-1 text-sm'

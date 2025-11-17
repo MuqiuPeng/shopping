@@ -15,29 +15,30 @@ const variantSchema = z.object({
   lowStockThreshold: z.number().int().default(5),
   trackInventory: z.boolean().default(true),
   // 变体属性
-  size: z.string().optional().nullable(), // S/M/L/XL 或具体尺寸
-  color: z.string().optional().nullable(), // 颜色
-  material: z.string().optional().nullable(), // 材质(手链场景:和田玉、翡翠等)
-  weight: z.number().optional().nullable(), // 重量
-  // 其他属性可用 JSON 存储
-  attributes: z.any().optional().nullable(), // {bead_diameter: 8, length: 18, ...}
-  isDefault: z.boolean().default(false), // 是否为默认变体
+  size: z.string().optional().nullable(),
+  color: z.string().optional().nullable(),
+  material: z.string().optional().nullable(),
+  weight: z.number().optional().nullable(),
+  attributes: z.any().optional().nullable(),
+  isDefault: z.boolean().default(false),
   sortOrder: z.number().int().default(0),
   isActive: z.boolean().default(true),
-  // 统计字段 (只读，不需要在表单中编辑)
   salesCount: z.number().int().default(0).optional(),
   createdAt: z.date().optional(),
   updatedAt: z.date().optional(),
-  // Relations (可选，用于显示数据)
   variant_images: z.array(z.any()).optional()
 });
 
-// Image schema
+// Image schema - 完全匹配 Prisma product_images model
 const imageSchema = z.object({
   id: z.string().optional(),
-  url: z.string().min(1, 'Image URL is required'), // Changed from .url() to accept any non-empty string
+  productId: z.string().optional(), // 会自动填充
+  url: z.string().min(1, 'Image URL is required'),
+  publicId: z.string().optional().nullable(), // Cloudinary public_id
+  isCover: z.boolean().default(false),
   altText: z.string().optional().nullable(),
-  sortOrder: z.number().int().default(0)
+  sortOrder: z.number().int().default(0),
+  createdAt: z.date().optional()
 });
 
 // FAQ schema

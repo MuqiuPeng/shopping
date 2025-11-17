@@ -157,6 +157,8 @@ model product_images {
   id        String   @id
   productId String
   url       String
+  publicId  String? // Cloudinary public_id for deletion
+  isCover   Boolean  @default(false)
   altText   String?
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
