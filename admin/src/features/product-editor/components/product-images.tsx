@@ -21,7 +21,7 @@ interface ProductImage {
   id?: string;
   productId?: string;
   url: string;
-  publicId?: string | null; // ✅ 添加 publicId
+  publicId?: string | null;
   isCover: boolean;
   altText: string | null;
   sortOrder: number;
@@ -38,7 +38,6 @@ export default function ProductImages({ onChange }: ProductImagesProps) {
   const { watch, setValue } = form;
 
   const productImages = watch('product_images') || [];
-  console.log('productImages: ', productImages);
 
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -72,10 +71,10 @@ export default function ProductImages({ onChange }: ProductImagesProps) {
 
       const newImages: ProductImage[] = results.map((result, index) => ({
         url: result.url,
-        publicId: result.publicId, // ✅ 保存 publicId
+        publicId: result.publicId,
         altText: null,
         sortOrder: productImages.length + index,
-        isCover: productImages.length === 0 && index === 0 // ✅ 第一张自动设为封面
+        isCover: productImages.length === 0 && index === 0
       }));
 
       const updatedImages = [...productImages, ...newImages];
@@ -113,12 +112,10 @@ export default function ProductImages({ onChange }: ProductImagesProps) {
     const [removed] = newImages.splice(draggedIndex, 1);
     newImages.splice(targetIndex, 0, removed);
 
-    // ✅ 更新 sortOrder
     newImages.forEach((img, i) => {
       img.sortOrder = i;
     });
 
-    // ✅ 更新 form 数据
     setValue('product_images', newImages, { shouldDirty: true });
     setDraggedId(null);
     onChange?.();

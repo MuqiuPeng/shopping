@@ -164,11 +164,6 @@ export const getProductById = async (id: string) => {
   }
 };
 
-/**
- * Get product by slug
- * @param slug 产品 slug
- * @returns Product 或 null
- */
 export const getProductBySlug = async (slug: string) => {
   try {
     const product = await db.products.findUnique({
@@ -205,11 +200,6 @@ export const getProductBySlug = async (slug: string) => {
   }
 };
 
-/**
- * Create a new product
- * @param data 产品创建数据
- * @returns 创建的产品
- */
 export const createProduct = async (data: CreateProductInput) => {
   try {
     const product = await db.products.create({
@@ -230,15 +220,22 @@ export const createProduct = async (data: CreateProductInput) => {
   }
 };
 
-/**
- * Update a product
- * @param id 产品 ID
- * @param data 更新数据
- * @returns 更新后的产品
- */
 export const updateProduct = async (id: string, data: UpdateProductInput) => {
   try {
     const result = await db.$transaction(async (tx) => {
+      // ========== 0. Get the thumbnail ==========
+      let thumbnailImage: string | undefined = undefined;
+
+      const coverImage = data.product_images?.find(
+        (img) => img.isCover === true
+      );
+
+      if (coverImage) {
+        thumbnailImage = coverImage.url;
+      } else if (data.product_images && data.product_images.length > 0) {
+        thumbnailImage = data.product_images[0].url;
+      }
+
       // ========== 1. Update Main Product ==========
       const product = await tx.products.update({
         where: { id },
@@ -246,7 +243,7 @@ export const updateProduct = async (id: string, data: UpdateProductInput) => {
           name: data.name,
           slug: data.slug,
           description: data.description,
-          thumbnail: data.thumbnail,
+          thumbnail: thumbnailImage,
           categoryId: data.categoryId,
           status: data.status,
           isActive: data.isActive,
@@ -358,22 +355,22 @@ export const updateProduct = async (id: string, data: UpdateProductInput) => {
         // Create or update images
         for (const image of data.product_images) {
           if (image.id && existingIds.includes(image.id)) {
-            // Update existing image
             await tx.product_images.update({
               where: { id: image.id },
               data: {
                 url: image.url,
+                isCover: image.isCover,
                 altText: image.altText,
                 sortOrder: image.sortOrder
               }
             });
           } else {
-            // Create new image
             await tx.product_images.create({
               data: {
                 id: randomUUID(),
                 productId: id,
                 url: image.url,
+                isCover: image.isCover || false,
                 altText: image.altText,
                 sortOrder: image.sortOrder || 0
               }
@@ -477,19 +474,10 @@ export const updateProduct = async (id: string, data: UpdateProductInput) => {
   }
 };
 
-/**
- * Delete a product (soft delete)
- * @param id 产品 ID
- * @returns 更新后的产品
- */
 export const deleteProduct = async (id: string) => {
   try {
-    const product = await db.products.update({
-      where: { id },
-      data: {
-        status: ProductStatus.ARCHIVED,
-        isActive: false
-      }
+    const product = await db.products.delete({
+      where: { id }
     });
 
     return serializeProduct(product);
@@ -498,10 +486,6 @@ export const deleteProduct = async (id: string) => {
   }
 };
 
-/**
- * Increment product view count
- * @param id 产品 ID
- */
 export const incrementViewCount = async (id: string) => {
   try {
     await db.products.update({
@@ -519,10 +503,6 @@ export const incrementViewCount = async (id: string) => {
 
 // ============ Product Images ============
 
-/**
- * Get all images for a product
- * @param productId 产品 ID
- */
 export const getProductImages = async (productId: string) => {
   try {
     const images = await db.product_images.findMany({
@@ -536,10 +516,6 @@ export const getProductImages = async (productId: string) => {
   }
 };
 
-/**
- * Get product image by ID
- * @param id 图片 ID
- */
 export const getProductImageById = async (id: string) => {
   try {
     const image = await db.product_images.findUnique({
@@ -552,10 +528,6 @@ export const getProductImageById = async (id: string) => {
   }
 };
 
-/**
- * Create a product image
- * @param data 图片数据
- */
 export const createProductImage = async (data: CreateProductImageInput) => {
   try {
     const image = await db.product_images.create({
@@ -571,10 +543,6 @@ export const createProductImage = async (data: CreateProductImageInput) => {
   }
 };
 
-/**
- * Create multiple product images
- * @param images 图片数据数组
- */
 export const createProductImages = async (
   images: CreateProductImageInput[]
 ) => {
@@ -592,11 +560,6 @@ export const createProductImages = async (
   }
 };
 
-/**
- * Update a product image
- * @param id 图片 ID
- * @param data 更新数据
- */
 export const updateProductImage = async (
   id: string,
   data: UpdateProductImageInput
@@ -613,10 +576,6 @@ export const updateProductImage = async (
   }
 };
 
-/**
- * Delete a product image
- * @param id 图片 ID
- */
 export const deleteProductImage = async (id: string) => {
   try {
     await db.product_images.delete({
@@ -629,10 +588,6 @@ export const deleteProductImage = async (id: string) => {
   }
 };
 
-/**
- * Reorder product images
- * @param reorders 重排序数据数组
- */
 export const reorderProductImages = async (
   reorders: ReorderProductImagesInput[]
 ) => {

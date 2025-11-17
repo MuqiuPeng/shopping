@@ -36,7 +36,7 @@ const imageSchema = z.object({
   url: z.string().min(1, 'Image URL is required'),
   publicId: z.string().optional().nullable(), // Cloudinary public_id
   isCover: z.boolean().default(false),
-  altText: z.string().optional().nullable(),
+  altText: z.string().nullable().default(null),
   sortOrder: z.number().int().default(0),
   createdAt: z.date().optional()
 });

@@ -21,6 +21,7 @@ interface ProductTableProps {
   products: Product[];
   selectedProducts: Set<string>;
   onSelectAll: () => void;
+  refetchProducts: () => void;
   onSelectProduct: (id: string) => void;
   isAllSelected: boolean;
 }
@@ -29,6 +30,7 @@ export function ProductTable({
   products,
   selectedProducts,
   onSelectAll,
+  refetchProducts,
   onSelectProduct,
   isAllSelected
 }: ProductTableProps) {
@@ -79,6 +81,7 @@ export function ProductTable({
                 product={product}
                 isSelected={selectedProducts.has(product.id)}
                 onSelect={() => onSelectProduct(product.id)}
+                refetchProducts={refetchProducts}
               />
             ))}
           </tbody>

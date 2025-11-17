@@ -67,10 +67,14 @@ export interface ProductVariantInput {
 // ============ Image Input Types ============
 
 export interface ProductImageInput {
-  id?: string; // If provided, update; otherwise create new
+  id?: string;
+  productId?: string;
   url: string;
-  altText?: string | null;
-  sortOrder?: number;
+  publicId?: string | null;
+  isCover: boolean;
+  altText: string | null;
+  sortOrder: number;
+  createdAt?: Date;
 }
 
 export interface VariantImageInput {

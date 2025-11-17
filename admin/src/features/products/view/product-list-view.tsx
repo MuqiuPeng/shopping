@@ -243,6 +243,7 @@ export function ProductListView() {
                   selectedProducts.size === filteredProducts.length &&
                   filteredProducts.length > 0
                 }
+                refetchProducts={handleRefetch}
               />
             )}
           </>

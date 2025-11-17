@@ -10,6 +10,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { MoreHorizontal, Edit, Eye, Copy, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useConfirmDialog } from '@/components/confirm-dialog-provider';
+import { deleteProduct } from '@/repositories';
 
 interface Product {
   id: string;
@@ -28,14 +30,44 @@ interface ProductRowProps {
   product: Product;
   isSelected: boolean;
   onSelect: () => void;
+  refetchProducts: () => void;
 }
 
-export function ProductRow({ product, isSelected, onSelect }: ProductRowProps) {
+export function ProductRow({
+  product,
+  isSelected,
+  onSelect,
+  refetchProducts
+}: ProductRowProps) {
   const router = useRouter();
+
+  const { confirm } = useConfirmDialog();
 
   // Edit Product button click handler
   const handleEditProductClicked = () => {
     router.push(`/dashboard/product/${product.id}/edit`);
+  };
+
+  const handleDeleteProductClicked = async () => {
+    await confirm(
+      async () => {
+        try {
+          // delete the product via repo
+          console.log(product.id);
+          await deleteProduct(product.id);
+
+          await refetchProducts();
+        } catch (error) {}
+      },
+      {
+        title: 'Delete Product?',
+        description:
+          'Are you sure you want to delete this Product? This action cannot be undone.',
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+        variant: 'destructive'
+      }
+    );
   };
 
   return (
@@ -115,7 +147,10 @@ export function ProductRow({ product, isSelected, onSelect }: ProductRowProps) {
               <Copy className='mr-2 h-4 w-4' />
               Duplicate
             </DropdownMenuItem>
-            <DropdownMenuItem className='text-destructive'>
+            <DropdownMenuItem
+              className='text-destructive'
+              onClick={handleDeleteProductClicked}
+            >
               <Trash2 className='mr-2 h-4 w-4' />
               Delete
             </DropdownMenuItem>
