@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import ProductNotFound from "@/component/product-not-found";
+import ProductNotFound from "@/components/product-not-found";
 
 // Sample product data (in real app, this would come from API)
 interface Product {

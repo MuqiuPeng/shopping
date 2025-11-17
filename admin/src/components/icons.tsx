@@ -68,5 +68,6 @@ export const Icons = {
   github: IconBrandGithub,
   twitter: IconBrandTwitter,
   check: IconCheck,
-  crown: IconCrown
+  crown: IconCrown,
+  tag: IconFileText
 };

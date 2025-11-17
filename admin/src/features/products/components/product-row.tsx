@@ -141,11 +141,11 @@ export function ProductRow({
             </DropdownMenuItem>
             <DropdownMenuItem>
               <Eye className='mr-2 h-4 w-4' />
-              Preview
+              Preview (Coming Soon)
             </DropdownMenuItem>
             <DropdownMenuItem>
               <Copy className='mr-2 h-4 w-4' />
-              Duplicate
+              Duplicate (Coming Soon)
             </DropdownMenuItem>
             <DropdownMenuItem
               className='text-destructive'
