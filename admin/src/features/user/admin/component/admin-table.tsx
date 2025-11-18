@@ -88,7 +88,6 @@ export const AdminTable = () => {
   const [rowSelection, setRowSelection] = useState({});
 
   const { data, isLoading, error, refetch } = useOrgMemberList();
-  console.log(JSON.stringify(data, null, 2));
 
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleDateString('en-US', {

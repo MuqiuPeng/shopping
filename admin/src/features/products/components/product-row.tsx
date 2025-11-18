@@ -52,8 +52,6 @@ export function ProductRow({
     await confirm(
       async () => {
         try {
-          // delete the product via repo
-          console.log(product.id);
           await deleteProduct(product.id);
 
           await refetchProducts();

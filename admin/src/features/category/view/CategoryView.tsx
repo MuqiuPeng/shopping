@@ -1,9 +1,47 @@
-import React from 'react';
+'use client';
 
-// TODO: Implement CategoryView component
+import PageContainer from '@/components/layout/page-container';
+import CategoryLoading from '../component/category-loading';
+import CategoriesList from '../component/categories-list';
+import {
+  CategoryProvider,
+  useCategoryContext
+} from '../context/category-context';
+
+const CategoryViewContent = () => {
+  const {
+    isLoading,
+    searchTerm,
+    setSearchTerm,
+    selectedCategoryId,
+    setSelectedCategoryId,
+    selectedCategory
+  } = useCategoryContext();
+
+  return (
+    <PageContainer scrollable={false}>
+      <div className='flex flex-1 flex-col gap-4 overflow-hidden p-4 lg:flex-row lg:gap-6 lg:p-6'>
+        {isLoading && <CategoryLoading />}
+        {!isLoading && (
+          <CategoriesList
+            searchTerm={searchTerm}
+            selectedCategoryId={selectedCategoryId}
+            setSearchTerm={setSearchTerm}
+            setSelectedCategoryId={setSelectedCategoryId}
+            selectedCategory={selectedCategory}
+          />
+        )}
+      </div>
+    </PageContainer>
+  );
+};
 
 const CategoryView = () => {
-  return <div>category view</div>;
+  return (
+    <CategoryProvider>
+      <CategoryViewContent />
+    </CategoryProvider>
+  );
 };
 
 export default CategoryView;

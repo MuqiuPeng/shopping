@@ -52,14 +52,18 @@ model carts {
 }
 
 model categories {
-  id          String     @id
-  name        String     @unique
-  slug        String     @unique
+  id          String       @id
+  name        String       @unique
+  slug        String       @unique
   description String?
   imageUrl    String?
-  isActive    Boolean    @default(true)
-  sortOrder   Int        @default(0)
-  createdAt   DateTime   @default(now())
+  isActive    Boolean      @default(true)
+  sortOrder   Int          @default(0)
+  parentId    String?
+  parent      categories?  @relation("CategoryToParent", fields: [parentId], references: [id])
+  children    categories[] @relation("CategoryToParent")
+  path        String       @default("")
+  createdAt   DateTime     @default(now())
   updatedAt   DateTime
   products    products[]
 

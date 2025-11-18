@@ -3,69 +3,46 @@
 import { db } from '@/lib/prisma';
 import { handleError } from '@/utils';
 import { randomUUID } from 'crypto';
-import {
-  GetAllCategoriesInputProps,
-  PaginatedCategoriesOutput,
-  CreateCategoryInput,
-  UpdateCategoryInput
-} from './category.types';
+import { CreateCategoryInput, UpdateCategoryInput } from './category.types';
+import { sl } from 'zod/v4/locales';
 
-/**
- * Get all categories with pagination
- * @param page 页码，默认为 1
- * @param pageSize 每页数量，默认为 10
- * @param orderBy 排序字段，默认按排序顺序
- * @param isActive 是否激活
- */
-export const getAllCategories = async ({
-  page = 1,
-  pageSize = 10,
-  orderBy = 'sortOrder',
-  isActive
-}: GetAllCategoriesInputProps = {}): Promise<PaginatedCategoriesOutput> => {
+function generateSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '') // 移除特殊字符
+    .replace(/[\s_-]+/g, '-') // 替换空格、下划线为连字符
+    .replace(/^-+|-+$/g, ''); // 移除首尾连字符
+}
+
+async function generatePath(
+  parentId: string | null,
+  slug: string
+): Promise<string> {
+  if (!parentId) return '';
+
+  const parent = await db.categories.findUnique({
+    where: { id: parentId },
+    select: { path: true, id: true }
+  });
+
+  if (!parent) return slug;
+
+  return parent.path ? `${parent.path}>${slug}` : parent.id;
+}
+
+export const getAllCategories = async () => {
   try {
-    const skip = (page - 1) * pageSize;
+    const categories = await db.categories.findMany({
+      orderBy: { sortOrder: 'asc' }
+    });
 
-    // Build where clause
-    const where: any = {};
-    if (isActive !== undefined) where.isActive = isActive;
-
-    const [categories, total] = await Promise.all([
-      db.categories.findMany({
-        skip,
-        take: pageSize,
-        where,
-        orderBy: { [orderBy]: orderBy === 'sortOrder' ? 'asc' : 'desc' },
-        include: {
-          _count: {
-            select: {
-              products: true
-            }
-          }
-        }
-      }),
-      db.categories.count({ where })
-    ]);
-
-    return {
-      data: categories as any,
-      pagination: {
-        page,
-        pageSize,
-        total,
-        totalPages: Math.ceil(total / pageSize)
-      }
-    };
+    return categories;
   } catch (error) {
     throw handleError(error);
   }
 };
 
-/**
- * Get category by ID
- * @param id 分类 ID
- * @returns Category 或 null
- */
 export const getCategoryById = async (id: string) => {
   try {
     const category = await db.categories.findUnique({
@@ -85,11 +62,6 @@ export const getCategoryById = async (id: string) => {
   }
 };
 
-/**
- * Get category by slug
- * @param slug 分类 slug
- * @returns Category 或 null
- */
 export const getCategoryBySlug = async (slug: string) => {
   try {
     const category = await db.categories.findUnique({
@@ -109,33 +81,60 @@ export const getCategoryBySlug = async (slug: string) => {
   }
 };
 
-/**
- * Create a new category
- * @param data 分类数据
- * @returns 创建的分类
- */
-export const createCategory = async (data: CreateCategoryInput) => {
+export async function createCategory(data: {
+  name: string;
+  slug?: string;
+  description?: string | null;
+  imageUrl?: string;
+  parentId: string | null;
+  isActive?: boolean;
+  sortOrder?: number;
+}) {
   try {
+    const id = randomUUID();
+
+    const slug = data.slug || generateSlug(data.name);
+
+    const existingSlug = await db.categories.findUnique({
+      where: { slug }
+    });
+
+    if (existingSlug) {
+      throw new Error(`Slug "${slug}" already exists`);
+    }
+
+    const existingName = await db.categories.findUnique({
+      where: { name: data.name }
+    });
+
+    if (existingName) {
+      throw new Error(`Category name "${data.name}" already exists`);
+    }
+
+    const path = await generatePath(data.parentId || null, slug);
+
     const category = await db.categories.create({
       data: {
-        ...data,
-        id: randomUUID(),
+        id,
+        name: data.name,
+        slug,
+        description: data.description,
+        imageUrl: data.imageUrl,
+        parentId: data.parentId || null,
+        path,
+        isActive: data.isActive ?? true,
+        sortOrder: data.sortOrder ?? 0,
         updatedAt: new Date()
       }
     });
 
-    return category;
-  } catch (error) {
-    throw handleError(error);
+    return { success: true, data: category };
+  } catch (error: any) {
+    console.error('Create category error:', error);
+    return { success: false, error: error.message };
   }
-};
+}
 
-/**
- * Update a category
- * @param id 分类 ID
- * @param data 更新数据
- * @returns 更新后的分类
- */
 export const updateCategory = async (id: string, data: UpdateCategoryInput) => {
   try {
     const category = await db.categories.update({
@@ -152,18 +151,40 @@ export const updateCategory = async (id: string, data: UpdateCategoryInput) => {
   }
 };
 
-/**
- * Delete a category (soft delete)
- * @param id 分类 ID
- * @returns 更新后的分类
- */
 export const deleteCategory = async (id: string) => {
   try {
+    // verify if category has any children or products before deleting
+    // verify product
+    const productsCount = await db.products.count({
+      where: { categoryId: id }
+    });
+
+    if (productsCount > 0) {
+      throw new Error(
+        'Cannot delete category with associated products. Please reassign or delete the products first.'
+      );
+    }
+
+    const childCategoriesCount = await db.categories.count({
+      where: { parentId: id }
+    });
+
+    if (childCategoriesCount > 0) {
+      throw new Error(
+        'Cannot delete category with subcategories. Please reassign or delete the subcategories first.'
+      );
+    }
+
     const category = await db.categories.update({
       where: { id },
       data: {
         isActive: false
       }
+    });
+
+    // delete the category by id
+    await db.categories.delete({
+      where: { id }
     });
 
     return category;

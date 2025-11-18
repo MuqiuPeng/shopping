@@ -177,7 +177,6 @@ export function ProductListView() {
   };
 
   const handleFilterChange = (filters: typeof localFilters) => {
-    console.log('filter changed');
     setLocalFilters(filters);
   };
 

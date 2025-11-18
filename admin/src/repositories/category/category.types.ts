@@ -25,20 +25,8 @@ export interface CreateCategoryInput {
 export interface UpdateCategoryInput {
   name?: string;
   slug?: string;
-  description?: string;
+  description?: string | null;
   imageUrl?: string;
   isActive?: boolean;
   sortOrder?: number;
-}
-
-// ============ Output Types ============
-
-export interface PaginatedCategoriesOutput {
-  data: Category[];
-  pagination: {
-    page: number;
-    pageSize: number;
-    total: number;
-    totalPages: number;
-  };
 }
