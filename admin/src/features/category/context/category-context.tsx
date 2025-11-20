@@ -37,7 +37,6 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     null
   );
-  console.log('selectedCategoryId: ', selectedCategoryId);
   const [searchTerm, setSearchTerm] = useState('');
 
   const {

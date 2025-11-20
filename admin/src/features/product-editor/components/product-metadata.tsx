@@ -1,6 +1,9 @@
 'use client';
 
+// React & Third-party
 import { useState } from 'react';
+
+// UI Components
 import {
   Card,
   CardContent,
@@ -13,19 +16,45 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, X } from 'lucide-react';
-import { useProductForm } from '../context/product-form-context';
 
-export default function ProductMetadata() {
+// Icons
+import { ChevronRight, Plus, X } from 'lucide-react';
+
+// Business Logic & Hooks
+import { useProductForm } from '../context/product-form-context';
+import useCategoryData from '../hooks/use-category-data';
+import { CategorySelection } from './categoey-selection';
+import { updateProductCategories } from '@/repositories/product-category/product-category-repo';
+import { onToast, onToastError } from '@/lib/toast';
+
+interface ProductMetadataProps {
+  productId: string;
+}
+
+export default function ProductMetadata({ productId }: ProductMetadataProps) {
+  // ====== Form Context ======
   const { form } = useProductForm();
   const { register, setValue, watch } = form;
 
+  // ====== State ======
+  const [dialogOpen, setDialogOpen] = useState<boolean>(false);
+  const [newTag, setNewTag] = useState('');
+
+  // ====== Category Data ======
+  const {
+    selectedCategories,
+    availableCategories,
+    availableCategoriesTree,
+    refetch
+  } = useCategoryData({ productId });
+
+  // ====== Watched Form Values ======
   const tagIds = watch('tagIds') || [];
   const isFeatured = watch('isFeatured');
   const isNew = watch('isNew');
 
-  const [newTag, setNewTag] = useState('');
-
+  // ====== Handlers ======
+  // Add tag
   const handleAddTag = () => {
     if (newTag.trim() && !tagIds.includes(newTag)) {
       setValue('tagIds', [...tagIds, newTag], { shouldDirty: true });
@@ -33,12 +62,28 @@ export default function ProductMetadata() {
     }
   };
 
+  // Remove tag
   const handleRemoveTag = (tag: string) => {
     setValue(
       'tagIds',
       tagIds.filter((t: string) => t !== tag),
       { shouldDirty: true }
     );
+  };
+
+  // Confirm category selection
+  const onConfirmHandler = async (
+    productId: string,
+    selectedCategories: Array<{ id: string }>
+  ) => {
+    try {
+      const selectedCategoriesIds = selectedCategories.map((cate) => cate.id);
+      await updateProductCategories(productId, selectedCategoriesIds);
+      await refetch();
+      onToast('Category updated successfully');
+    } catch (error) {
+      onToastError('Failed to update category');
+    }
   };
 
   return (
@@ -48,22 +93,40 @@ export default function ProductMetadata() {
         <CardDescription>Categories and tags</CardDescription>
       </CardHeader>
       <CardContent className='space-y-6'>
-        {/* Category - Single select for now */}
+        {/* Categories */}{' '}
         <div className='space-y-2'>
           <Label htmlFor='categoryId' className='text-sm font-medium'>
             Category
           </Label>
-          <Input
-            id='categoryId'
-            {...register('categoryId')}
-            placeholder='Enter category ID'
-            className='text-sm'
+          <Button
+            type='button'
+            variant='outline'
+            className='w-full justify-between bg-transparent'
+            onClick={() => setDialogOpen(true)}
+          >
+            <span
+              className={
+                selectedCategories.length > 0
+                  ? 'text-foreground'
+                  : 'text-muted-foreground'
+              }
+            >
+              {selectedCategories.length > 0
+                ? `${selectedCategories.length} category(ies) selected`
+                : 'Select categories...'}
+            </span>
+            <ChevronRight size={18} />
+          </Button>
+          <CategorySelection
+            productId={productId}
+            open={dialogOpen}
+            onOpenChange={() => setDialogOpen(!dialogOpen)}
+            categories={availableCategories}
+            selectedCategories={selectedCategories}
+            categoriesTree={availableCategoriesTree}
+            onConfirmHandler={onConfirmHandler}
           />
-          <p className='text-muted-foreground text-xs'>
-            Category ID (will be replaced with select later)
-          </p>
         </div>
-
         {/* Tags */}
         <div className='space-y-3'>
           <Label className='text-sm font-medium'>Tags</Label>
@@ -102,7 +165,6 @@ export default function ProductMetadata() {
             ))}
           </div>
         </div>
-
         {/* Flags */}
         <div className='space-y-3'>
           <Label className='text-sm font-medium'>Product Flags</Label>

@@ -59,7 +59,6 @@ export const productFormSchema = z.object({
   shortDescription: z.string().max(500).optional().nullable(), // 前端用，数据库没有此字段
 
   // Category & Brand
-  categoryId: z.string().optional().nullable(),
   brandId: z.string().optional().nullable(), // 数据库目前没有 brand 字段
 
   // Status

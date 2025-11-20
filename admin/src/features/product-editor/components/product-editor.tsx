@@ -1,10 +1,13 @@
 'use client';
 
+// React & Third-party
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Save } from 'lucide-react';
 import { toast } from 'sonner';
+
+// UI Components
 import { Button } from '@/components/ui/button';
 import ProductBasicInfo from './product-basic-info';
 import ProductImages from './product-images';
@@ -13,13 +16,15 @@ import ProductMetadata from './product-metadata';
 import ProductSEO from './product-seo';
 import PublishSection from './publish-section';
 import ProductNotFound from './product-not-found';
+
+// Business Logic & Hooks
 import { useProductData } from '../hooks/use-product-data';
+import useUpdateProductData from '../hooks/use-update-product-data';
 import { productFormSchema, ProductFormData } from '../schemas/product-schema';
 import { ProductFormProvider } from '../context/product-form-context';
 import { ProductStatus } from '@prisma/client';
 import { getErrorMessage } from '../utils/product-error-handler';
 import { onToast, onToastError } from '@/lib/toast';
-import useUpdateProductData from '../hooks/use-update-product-data';
 
 interface ProductEditorProps {
   productId: string;
@@ -28,10 +33,11 @@ interface ProductEditorProps {
 export default function ProductEditor(props: ProductEditorProps) {
   const { productId } = props;
 
+  // ====== Data Hooks ======
   const { data: product, error, isLoading } = useProductData(productId);
   const { updateProduct } = useUpdateProductData({ productId });
 
-  // Initialize form with default values
+  // ====== Form State ======
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productFormSchema),
     defaultValues: {
@@ -50,6 +56,7 @@ export default function ProductEditor(props: ProductEditorProps) {
     }
   });
 
+  // ====== Effects ======
   // Update form when product data loads
   useEffect(() => {
     if (product) {
@@ -58,7 +65,6 @@ export default function ProductEditor(props: ProductEditorProps) {
         slug: product.slug || '',
         description: product.description || '',
         shortDescription: product.shortDescription || '',
-        categoryId: product.categoryId || null,
         brandId: product.brandId || null,
         status: product.status || ProductStatus.DRAFT,
         isActive: product.isActive ?? true,
@@ -77,23 +83,20 @@ export default function ProductEditor(props: ProductEditorProps) {
     }
   }, [product, form]);
 
+  // ====== Handlers ======
+  // 提交表单
   const onSubmit = async (data: ProductFormData) => {
     await updateProduct(data);
-
-    onToast(
-      'Product saved successfully!',
-      'Failed to save product. Please try again.'
-    );
+    onToast('Product saved successfully!');
   };
 
+  // 表单错误处理
   const onError = (errors: any) => {
     const firstErrorField = Object.keys(errors)[0];
     const firstError = errors[firstErrorField];
-
     if (firstError) {
       const fieldName = getErrorMessage(firstErrorField);
       const errorMessage = firstError.message || 'Invalid input';
-
       onToastError('Please check the form', `${fieldName}: ${errorMessage}`);
     } else {
       onToastError('Please check the form for errors');
@@ -166,7 +169,7 @@ export default function ProductEditor(props: ProductEditorProps) {
 
           {/* Right Column - Sidebar */}
           <div className='space-y-6'>
-            <ProductMetadata />
+            <ProductMetadata productId={productId} />
             <PublishSection />
           </div>
         </div>

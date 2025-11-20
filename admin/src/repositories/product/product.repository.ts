@@ -237,14 +237,13 @@ export const updateProduct = async (id: string, data: UpdateProductInput) => {
       }
 
       // ========== 1. Update Main Product ==========
-      const product = await tx.products.update({
+      await tx.products.update({
         where: { id },
         data: {
           name: data.name,
           slug: data.slug,
           description: data.description,
           thumbnail: thumbnailImage,
-          categoryId: data.categoryId,
           status: data.status,
           isActive: data.isActive,
           isFeatured: data.isFeatured,

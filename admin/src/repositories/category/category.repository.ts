@@ -33,10 +33,21 @@ async function generatePath(
 export const getAllCategories = async () => {
   try {
     const categories = await db.categories.findMany({
-      orderBy: { sortOrder: 'asc' }
+      orderBy: { sortOrder: 'asc' },
+      include: {
+        _count: {
+          select: {
+            products: true // 统计关联的产品数量
+          }
+        }
+      }
     });
 
-    return categories;
+    // 将 _count.products 转换为 productCount
+    return categories.map((category) => ({
+      ...category,
+      productCount: category._count.products
+    }));
   } catch (error) {
     throw handleError(error);
   }
@@ -51,11 +62,18 @@ export const getCategoryById = async (id: string) => {
           select: {
             products: true
           }
-        }
+        },
+        children: true, // 包含子分类
+        parent: true // 包含父分类
       }
     });
 
-    return category;
+    if (!category) return null;
+
+    return {
+      ...category,
+      productCount: category._count.products
+    };
   } catch (error) {
     throw handleError(error);
   }
@@ -70,11 +88,18 @@ export const getCategoryBySlug = async (slug: string) => {
           select: {
             products: true
           }
-        }
+        },
+        children: true,
+        parent: true
       }
     });
 
-    return category;
+    if (!category) return null;
+
+    return {
+      ...category,
+      productCount: category._count.products
+    };
   } catch (error) {
     throw handleError(error);
   }
@@ -167,8 +192,8 @@ export const deleteCategory = async (id: string) => {
     }
 
     // verify if category has any children or products before deleting
-    // verify product
-    const productsCount = await db.products.count({
+    // verify product (通过 product_categories 中间表)
+    const productsCount = await db.product_categories.count({
       where: { categoryId: id }
     });
 
@@ -202,6 +227,125 @@ export const deleteCategory = async (id: string) => {
     });
 
     return category;
+  } catch (error) {
+    throw handleError(error);
+  }
+};
+
+// 获取分类下的所有产品
+export const getCategoryProducts = async (
+  categoryId: string,
+  options?: {
+    includeSubcategories?: boolean;
+    limit?: number;
+    offset?: number;
+  }
+) => {
+  try {
+    const {
+      includeSubcategories = false,
+      limit = 50,
+      offset = 0
+    } = options || {};
+
+    let categoryIds = [categoryId];
+
+    // 如果包含子分类，获取所有子分类ID
+    if (includeSubcategories) {
+      const subcategories = await db.categories.findMany({
+        where: {
+          OR: [{ parentId: categoryId }, { path: { contains: categoryId } }]
+        },
+        select: { id: true }
+      });
+      categoryIds = [categoryId, ...subcategories.map((c) => c.id)];
+    }
+
+    const products = await db.products.findMany({
+      where: {
+        categories: {
+          some: {
+            categoryId: { in: categoryIds }
+          }
+        },
+        status: 'ACTIVE',
+        isActive: true
+      },
+      include: {
+        categories: {
+          include: {
+            category: true
+          }
+        },
+        variants: {
+          where: { isActive: true },
+          take: 1
+        },
+        product_images: {
+          where: { isCover: true },
+          take: 1
+        }
+      },
+      take: limit,
+      skip: offset,
+      orderBy: { createdAt: 'desc' }
+    });
+
+    return products;
+  } catch (error) {
+    throw handleError(error);
+  }
+};
+
+// 获取分类树（包含产品数量）
+export const getCategoryTree = async () => {
+  try {
+    const categories = await db.categories.findMany({
+      where: { isActive: true },
+      include: {
+        _count: {
+          select: {
+            products: true,
+            children: true
+          }
+        }
+      },
+      orderBy: { sortOrder: 'asc' }
+    });
+
+    // 构建树形结构
+    const buildTree = (parentId: string | null): any[] => {
+      return categories
+        .filter((cat) => cat.parentId === parentId)
+        .map((cat) => ({
+          ...cat,
+          productCount: cat._count.products,
+          childrenCount: cat._count.children,
+          children: buildTree(cat.id)
+        }));
+    };
+
+    return buildTree(null);
+  } catch (error) {
+    throw handleError(error);
+  }
+};
+
+// 批量更新分类排序
+export const updateCategoriesOrder = async (
+  updates: Array<{ id: string; sortOrder: number }>
+) => {
+  try {
+    await db.$transaction(
+      updates.map(({ id, sortOrder }) =>
+        db.categories.update({
+          where: { id },
+          data: { sortOrder, updatedAt: new Date() }
+        })
+      )
+    );
+
+    return { success: true };
   } catch (error) {
     throw handleError(error);
   }
