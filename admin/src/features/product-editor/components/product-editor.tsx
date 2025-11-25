@@ -88,14 +88,22 @@ export default function ProductEditor(props: ProductEditorProps) {
   // ====== Handlers ======
   // 提交表单
   const onSubmit = async (data: ProductFormData) => {
-    await updateProduct(data);
-    onToast(
-      'Product saved successfully! And we we are redirecting you back to the products list.'
-    );
+    try {
+      await updateProduct(data);
 
-    delay(1500);
+      onToast(
+        'Product saved successfully! And we we are redirecting you back to the products list.'
+      );
 
-    router.push('/dashboard/product');
+      await delay(1500);
+
+      router.push('/dashboard/product');
+    } catch (error) {
+      onToastError(
+        'Error saving product. Please try again.',
+        (error as Error).message
+      );
+    }
   };
 
   // 表单错误处理

@@ -13,11 +13,6 @@ interface UpdateProductArgs {
   arg: UpdateProductInput;
 }
 
-interface UseUpdateProductCategoryDataProps {
-  productId: string;
-  categories: Array<{ id: string; name: string }>;
-}
-
 const useUpdateProductData = ({ productId }: UseUpdateProductDataProps) => {
   const { trigger, isMutating, error, data, reset } = useSWRMutation(
     ['product', productId, 'update'],
@@ -31,7 +26,7 @@ const useUpdateProductData = ({ productId }: UseUpdateProductDataProps) => {
       return result;
     },
     {
-      throwOnError: false, // Don't throw, return error instead
+      throwOnError: true, // Don't throw, return error instead
       revalidate: true // Revalidate after mutation
     }
   );
