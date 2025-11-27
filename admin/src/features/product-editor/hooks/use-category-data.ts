@@ -38,8 +38,9 @@ function buildCategoryTree(
 
 const useCategoryData = ({ productId }: { productId: string }) => {
   const swrData = useSWR(
-    'products-categories',
+    `products-categories-${productId}`,
     async () => {
+      console.log();
       await delay(2000);
       return await getCategoryByProductId(productId);
     },
