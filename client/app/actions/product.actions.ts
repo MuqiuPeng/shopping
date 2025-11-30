@@ -1,8 +1,9 @@
 "use server";
 
+import { CategoryRepo } from "@/repo";
 import { ProductRepo } from "@/repo/product.repo";
 
-function serializeProducts(products: any) {
+function serializeProducts<T>(products: T): T {
   return JSON.parse(
     JSON.stringify(products, (key, value) => {
       if (typeof value === "object" && value !== null && "toJSON" in value) {
@@ -62,6 +63,44 @@ export async function getProductsByCategoryAction(input: {
     const { marketId, limit, offset } = input;
     const result = await ProductRepo.getMarketingProductWithPagination({
       categoryId: marketId,
+      limit,
+      offset,
+    });
+
+    return {
+      success: true,
+      data: serializeProducts(result),
+    };
+  } catch (error) {
+    console.error("Error fetching products by category:", error);
+    return {
+      success: false,
+      data: null,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+export async function getProductsByPathAction(input: {
+  categoryId: string;
+  limit: number;
+  offset: number;
+}) {
+  try {
+    const { categoryId, limit, offset } = input;
+    const categoryPath = await CategoryRepo.getCategoryPathById(categoryId);
+    if (!categoryPath) {
+      return {
+        success: false,
+        data: null,
+        error: "Category not found",
+      };
+    }
+
+    console.log("categoryPath: ", categoryPath);
+
+    const result = await ProductRepo.getProductByPathWithPagination({
+      path: categoryPath,
       limit,
       offset,
     });

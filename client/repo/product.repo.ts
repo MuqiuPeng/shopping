@@ -54,8 +54,8 @@ export class ProductRepo {
   }) {
     const { categoryId, limit, offset } = input;
 
+    // validation
     if (categoryId !== "all" && categoryId) {
-      // Verify if category exists
       const categoryExists = await db.categories.findUnique({
         where: { id: categoryId },
       });
@@ -65,6 +65,7 @@ export class ProductRepo {
       }
     }
 
+    // query condition
     let whereCondition = {};
     if (categoryId === "all") {
       whereCondition = {
@@ -114,6 +115,68 @@ export class ProductRepo {
     });
 
     console.log();
+
+    // Calculate pagination info
+    const currentPage = Math.floor(offset / limit) + 1;
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      products,
+      total,
+      currentPage,
+      totalPages,
+      hasNextPage: currentPage < totalPages,
+      hasPreviousPage: currentPage > 1,
+    };
+  }
+
+  public static async getProductByPathWithPagination(input: {
+    path: string;
+    limit: number;
+    offset: number;
+  }) {
+    const { path, limit, offset } = input;
+
+    let whereCondition = {
+      isActive: true,
+      categories: {
+        some: {
+          category: {
+            path: {
+              startsWith: path,
+            },
+          },
+        },
+      },
+    };
+
+    // Fetch total count
+    const total = await db.products.count({
+      where: whereCondition,
+    });
+
+    // Fetch products with pagination
+    const products = await db.products.findMany({
+      skip: offset,
+      take: limit,
+      where: whereCondition,
+      include: {
+        categories: {
+          include: {
+            category: true,
+          },
+        },
+        variants: true,
+        product_images: {
+          where: {
+            isCover: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
 
     // Calculate pagination info
     const currentPage = Math.floor(offset / limit) + 1;

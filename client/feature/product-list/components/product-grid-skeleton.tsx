@@ -12,30 +12,42 @@ export function ProductGridSkeleton({
       }
     >
       {Array.from({ length: 8 }).map((_, i) => (
-        <div
-          key={i}
-          className={
-            viewMode === "grid"
-              ? "animate-pulse"
-              : "flex items-center space-x-4 p-4 bg-card border border-border rounded-xl"
-          }
-        >
+        <div key={i}>
           {viewMode === "grid" ? (
-            <>
-              <div className="bg-secondary rounded-xl aspect-square mb-4 h-64" />
-              <div className="space-y-2">
-                <div className="h-4 bg-secondary rounded w-3/4" />
-                <div className="h-4 bg-secondary rounded w-1/2" />
+            // Grid view skeleton - matches ProductGridDisplay structure
+            <div className="group animate-pulse">
+              {/* Image skeleton - matches aspect-square */}
+              <div className="relative mb-4 overflow-hidden rounded-xl bg-secondary aspect-square" />
+              {/* Content skeleton */}
+              <div className="space-y-1">
+                {/* Title skeleton */}
+                <div className="space-y-2 mb-2">
+                  <div className="h-4 bg-secondary rounded w-4/5" />
+                  <div className="h-4 bg-secondary rounded w-3/5" />
+                </div>
+                {/* Price skeleton */}
+                <div className="flex items-center space-x-2">
+                  <div className="h-4 bg-secondary rounded w-20" />
+                  <div className="h-4 bg-secondary rounded w-24 opacity-50" />
+                </div>
               </div>
-            </>
+            </div>
           ) : (
-            <>
+            // List view skeleton - matches ProductListDisplay structure
+            <div className="animate-pulse flex items-center space-x-4 p-4 bg-card border border-border rounded-xl">
               <div className="w-20 h-20 bg-secondary rounded-lg shrink-0" />
-              <div className="flex-1 space-y-2">
-                <div className="h-4 bg-secondary rounded w-3/4" />
-                <div className="h-4 bg-secondary rounded w-1/2" />
+              <div className="flex-1 min-w-0 space-y-2">
+                <div className="h-4 bg-secondary rounded w-4/5" />
+                <div className="flex items-center space-x-2">
+                  <div className="h-4 bg-secondary rounded w-20" />
+                  <div className="h-4 bg-secondary rounded w-24 opacity-50" />
+                </div>
               </div>
-            </>
+              <div className="flex space-x-2 shrink-0">
+                <div className="w-8 h-8 bg-secondary rounded-lg" />
+                <div className="w-8 h-8 bg-secondary rounded-lg" />
+              </div>
+            </div>
           )}
         </div>
       ))}

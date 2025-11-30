@@ -4,19 +4,12 @@ import { ProductGridSkeleton } from "./product-grid-skeleton";
 import ProductGridDisplay from "./product-grid-display";
 import ProductListDisplay from "./product-list-display";
 import ProductListEmpty from "./product-list-empty";
-
-interface Product {
-  id: number;
-  name: string;
-  price: string;
-  originalPrice?: string;
-  image: string;
-  sale?: boolean;
-}
+import { product_variants, products } from "@prisma/client";
+import { ProductWithVariants } from "@/types/prisma";
 
 interface ProductDisplayProps {
   isLoading: boolean;
-  products: Product[];
+  products: ProductWithVariants[];
   viewMode: "grid" | "list";
 }
 
