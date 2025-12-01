@@ -63,8 +63,6 @@ export function ProductListView() {
   const paginationData = pageList.products.data;
   const isLoading = !pageList.products.data;
 
-  console.log(pageList);
-
   // --------------------
   // Handler functions
   // --------------------

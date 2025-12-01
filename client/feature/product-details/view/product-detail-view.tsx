@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { product_variants } from "@prisma/client";
 import { handleNullOrUndefinedValue } from "../../../utils/handle-null-value";
 import { handleDecimal, handleEmptyArray } from "@/utils";
+import useCart, { AddToCartInput } from "../hooks/use-cart";
 
 interface Product {
   id: number;
@@ -70,14 +71,9 @@ const ProductDetailView = ({ productId, reviews }: ProductDetailViewProps) => {
   // hooks
   // =================================
   const { data, isLoading, error } = useProduceData(productId);
-  const {
-    selectedImage,
-    setSelectedImage,
-    nextImage,
-    prevImage,
-    showZoom,
-    setShowZoom,
-  } = useGallery(data?.product_images?.length || 1);
+  const { selectedImage, setSelectedImage, nextImage, prevImage, setShowZoom } =
+    useGallery(data?.product_images?.length || 1);
+  const { addToCart } = useCart();
 
   // =================================
   // handlers
@@ -93,6 +89,11 @@ const ProductDetailView = ({ productId, reviews }: ProductDetailViewProps) => {
     setSelectedVariantId(id);
     const selectedVariant = variants.filter((item) => item.id === id)[0];
     setSelectedVariant(selectedVariant);
+  };
+
+  // Use AddToCartInput interface for cart input
+  const handleAddingToCart = async (input: AddToCartInput) => {
+    await addToCart(input);
   };
 
   // =================================
@@ -240,13 +241,22 @@ const ProductDetailView = ({ productId, reviews }: ProductDetailViewProps) => {
               </div>
 
               <div className="flex space-x-3">
-                <button className="flex-1 bg-primary text-primary-foreground py-3 px-6 rounded-lg font-medium hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center space-x-2">
+                <button
+                  className="flex-1 bg-primary text-primary-foreground py-3 px-6 rounded-lg font-medium hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center space-x-2"
+                  onClick={() =>
+                    handleAddingToCart({
+                      variantId: selectedVariantId,
+
+                      quantity,
+                    })
+                  }
+                >
                   <ShoppingCart className="w-5 h-5" />
                   <span>Add to Cart</span>
                 </button>
-                <button className="px-6 py-3 border border-input rounded-lg font-medium hover:bg-secondary transition-colors">
+                {/* <button className="px-6 py-3 border border-input rounded-lg font-medium hover:bg-secondary transition-colors">
                   <Gift className="w-5 h-5" />
-                </button>
+                </button> */}
               </div>
             </div>
 

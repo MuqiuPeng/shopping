@@ -5,3 +5,5 @@ export {
   getAllProductsAction,
   getProductsByPathAction,
 } from "./product.actions";
+
+export { updateCartInfoAction } from "./cart.action";

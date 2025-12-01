@@ -1,32 +1,33 @@
 import { db } from "@/lib/prisma";
-import { randomUUID } from "crypto";
 
-type AddItemResult = {
-  cartId: string;
-  items: Array<{
-    id: string;
-    variantId: string;
-    quantity: number;
-    createdAt: Date;
-    updatedAt: Date;
-  }>;
-};
-
+export interface CustomerAddingCartInput {
+  customerClerkId: string;
+  variantId: string;
+  quantity?: number;
+}
 export class CartRepo {
   static async customerAddingCart({
-    customerId,
+    customerClerkId,
     variantId,
     quantity = 1,
   }: {
-    customerId: string;
+    customerClerkId: string;
     variantId: string;
     quantity?: number;
   }) {
-    if (!customerId) throw new Error("customerId is required");
+    if (!customerClerkId) throw new Error("customerClerk   Id is required");
     if (!variantId) throw new Error("variantId is required");
     if (quantity <= 0) throw new Error("quantity must be >= 1");
 
     return await db.$transaction(async (tx) => {
+      const customer = await tx.customers.findUnique({
+        where: { clerkId: customerClerkId },
+      });
+
+      if (!customer) {
+        throw new Error(`Customer with clerkId ${customerClerkId} not found`);
+      }
+      const customerId = customer.id;
       let cart = await tx.carts.findUnique({
         where: { customerId },
       });
@@ -111,21 +112,21 @@ export class CartRepo {
     return cart;
   }
 
-  static async mergeLocalCartToCustomerCart({
-    customerId,
-    localItems,
-  }: {
-    customerId: string;
-    localItems: Array<{ variantId: string; quantity: number }>;
-  }) {
-    if (!localItems?.length) return;
+  // static async mergeLocalCartToCustomerCart({
+  //   customerId,
+  //   localItems,
+  // }: {
+  //   customerId: string;
+  //   localItems: Array<{ variantId: string; quantity: number }>;
+  // }) {
+  //   if (!localItems?.length) return;
 
-    for (const item of localItems) {
-      await this.customerAddingCart({
-        customerId,
-        variantId: item.variantId,
-        quantity: item.quantity,
-      });
-    }
-  }
+  //   for (const item of localItems) {
+  //     await this.customerAddingCart({
+  //       customerId,
+  //       variantId: item.variantId,
+  //       quantity: item.quantity,
+  //     });
+  //   }
+  // }
 }

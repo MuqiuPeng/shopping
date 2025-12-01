@@ -115,8 +115,6 @@ export class ProductRepo {
       },
     });
 
-    console.log();
-
     // Calculate pagination info
     const currentPage = Math.floor(offset / limit) + 1;
     const totalPages = Math.ceil(total / limit);

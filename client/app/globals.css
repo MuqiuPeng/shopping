@@ -123,4 +123,37 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Sonner Toast Custom Styles */
+  .sonner-toast {
+    @apply rounded-lg shadow-lg;
+  }
+
+  [data-sonner-toast][data-styled="true"] {
+    background-color: var(--card) !important;
+    border-color: var(--border) !important;
+    color: var(--card-foreground) !important;
+  }
+
+  [data-sonner-toast][data-styled="true"] [data-title] {
+    color: var(--card-foreground) !important;
+    font-weight: 500;
+  }
+
+  [data-sonner-toast][data-styled="true"] [data-description] {
+    color: var(--muted-foreground) !important;
+  }
+
+  [data-sonner-toast][data-styled="true"] [data-button] {
+    background-color: var(--primary) !important;
+    color: var(--primary-foreground) !important;
+  }
+
+  [data-sonner-toast][data-styled="true"][data-type="success"] {
+    border-left: 3px solid var(--accent);
+  }
+
+  [data-sonner-toast][data-styled="true"][data-type="error"] {
+    border-left: 3px solid var(--destructive);
+  }
 }

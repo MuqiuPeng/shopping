@@ -97,8 +97,6 @@ export async function getProductsByPathAction(input: {
       };
     }
 
-    console.log("categoryPath: ", categoryPath);
-
     const result = await ProductRepo.getProductByPathWithPagination({
       path: categoryPath,
       limit,
@@ -129,8 +127,6 @@ export async function getAllProductsAction(input: {
       limit,
       offset,
     });
-
-    console.log("result: ", result);
 
     return {
       success: true,
