@@ -7,8 +7,8 @@
     "url": "https://github.com/Kiranism"
   },
   "scripts": {
-    "dev": "prisma generate && next dev --turbopack",
-    "build": "prisma generate && next build",
+    "dev": "pnpm db:sync && prisma generate && next dev --turbopack",
+    "build": "pnpm db:sync && prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "eslint src --fix && pnpm format",
@@ -16,16 +16,13 @@
     "format": "prettier --write .",
     "format:check": "prettier -c -w .",
     "prepare": "husky",
-    "postinstall": "prisma generate",
-    "db::migrate:dev": "npx prisma migrate dev --name ",
-    "db::pull:dev": "npx prisma migrate dev",
-    "db::deploy:dev": "npx prisma migrate deploy",
-    "db::studio": "npx prisma studio",
-    "db::seed": "tsx prisma/seed.ts",
-    "db::init": "npx tsx ./prisma/db-init.ts"
-  },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
+    "postinstall": "pnpm db:sync && prisma generate",
+    "db:sync": "cp ../db/prisma/schema.prisma prisma/schema.prisma",
+    "db:generate": "pnpm db:sync && prisma generate",
+    "db:deploy": "pnpm db:sync && prisma migrate deploy",
+    "db:pull": "prisma db pull",
+    "db:studio": "prisma studio",
+    "db:seed": "tsx prisma/seed.ts"
   },
   "lint-staged": {
     "**/*.{js,jsx,tsx,ts,css,less,scss,sass}": [

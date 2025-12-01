@@ -1,5 +1,5 @@
-import { PrismaClient, ProductStatus } from '@prisma/client';
-import { Decimal } from '@prisma/client/runtime/library';
+// import { PrismaClient, ProductStatus } from '@prisma/client';
+// import { Decimal } from '@prisma/client/runtime/library';
 
 const prisma = new PrismaClient();
 
@@ -41,40 +41,40 @@ const categories = [
   //   allowChildren: false
   // },
   {
-    id: 'marketing-recommend',
-    name: 'Recommend',
-    slug: 'marketing-recommend',
-    description: 'Recommend marketing category',
-    imageUrl: '',
+    id: "marketing-recommend",
+    name: "Recommend",
+    slug: "marketing-recommend",
+    description: "Recommend marketing category",
+    imageUrl: "",
     createdAt: new Date(),
     updatedAt: new Date(),
-    parentId: 'marketing-all', // Top level
+    parentId: "marketing-all", // Top level
     isProtected: true,
-    allowChildren: false
-  }
+    allowChildren: false,
+  },
 ];
 
 async function main() {
-  console.log('🌱 Starting database cleanup...');
+  console.log("🌱 Starting database cleanup...");
 
   // await prisma.categories.deleteMany();
 
-  console.log('✅ Database cleanup completed');
-  console.log('');
+  console.log("✅ Database cleanup completed");
+  console.log("");
 
   // 1. Category Creation
-  console.log('📁 Creating categories...');
+  console.log("📁 Creating categories...");
   for (const cat of categories) {
     await prisma.categories.create({ data: cat });
   }
   console.log(`✅ Created ${categories.length} categories`);
 
-  console.log('🚀 Initialization is Finished');
+  console.log("🚀 Initialization is Finished");
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Error:', e);
+    console.error("❌ Error:", e);
     process.exit(1);
   })
   .finally(async () => {

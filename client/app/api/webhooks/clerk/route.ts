@@ -2,7 +2,7 @@ import { Webhook } from "svix";
 import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/prisma";
 
 export async function POST(req: Request) {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
       evt.data;
 
     try {
-      const customer = await prisma.customer.create({
+      const customer = await db.customers.create({
         data: {
           clerkId: id,
           email: email_addresses[0]?.email_address ?? "",
@@ -54,7 +54,6 @@ export async function POST(req: Request) {
           lastName: last_name ?? null,
           username: username ?? null,
           imageUrl: image_url ?? null,
-          role: "customer",
         },
       });
 

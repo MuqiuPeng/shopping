@@ -1,3 +1,4 @@
+// Client 项目独立的 Prisma Client
 import { PrismaClient } from "@prisma/client";
 
 const globalForPrisma = globalThis as unknown as {

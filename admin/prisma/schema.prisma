@@ -30,10 +30,10 @@ model addresses {
 model cart_items {
   id        String           @id
   cartId    String
-  variantId String
   quantity  Int              @default(1)
   createdAt DateTime         @default(now())
   updatedAt DateTime
+  variantId String
   carts     carts            @relation(fields: [cartId], references: [id], onDelete: Cascade)
   variant   product_variants @relation(fields: [variantId], references: [id], onDelete: Cascade)
 
@@ -43,12 +43,12 @@ model cart_items {
 }
 
 model carts {
-  id         String       @id
+  id         String       @id @default(cuid())
   createdAt  DateTime     @default(now())
-  updatedAt  DateTime
+  updatedAt  DateTime     @updatedAt
   customerId String       @unique
-  cart_items cart_items[]
-  customers  customers    @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  items      cart_items[]
+  customer   customers    @relation(fields: [customerId], references: [id], onDelete: Cascade)
 }
 
 model categories {
@@ -59,14 +59,14 @@ model categories {
   imageUrl      String?
   isActive      Boolean              @default(true)
   sortOrder     Int                  @default(0)
-  parentId      String?
-  parent        categories?          @relation("CategoryToParent", fields: [parentId], references: [id])
-  children      categories[]         @relation("CategoryToParent")
-  allowChildren Boolean              @default(true) // 是否允许有子分类
-  path          String               @default("")
-  isProtected   Boolean              @default(false) // All category, Marketing category 等 不可删除
   createdAt     DateTime             @default(now())
   updatedAt     DateTime
+  parentId      String?
+  path          String               @default("")
+  allowChildren Boolean              @default(true)
+  isProtected   Boolean              @default(false)
+  parent        categories?          @relation("CategoryToParent", fields: [parentId], references: [id])
+  children      categories[]         @relation("CategoryToParent")
   products      product_categories[]
 
   @@index([isActive])
@@ -74,7 +74,7 @@ model categories {
 }
 
 model customers {
-  id             String           @id
+  id             String           @id @default(cuid())
   clerkId        String           @unique
   email          String           @unique
   firstName      String?
@@ -84,7 +84,7 @@ model customers {
   phone          String?
   role           String           @default("customer")
   createdAt      DateTime         @default(now())
-  updatedAt      DateTime
+  updatedAt      DateTime         @updatedAt
   addresses      addresses[]
   carts          carts?
   orders         orders[]
@@ -98,15 +98,15 @@ model customers {
 model order_items {
   id           String           @id
   orderId      String
-  variantId    String
-  productName  String // 冗余存储,防止产品被删除后订单信息丢失
+  productName  String
   productSlug  String
-  variantName  String? // 变体名称,如 "大号-红色"
   productImage String?
   quantity     Int
-  price        Decimal          @db.Decimal(10, 2) // 下单时的价格
+  price        Decimal          @db.Decimal(10, 2)
   total        Decimal          @db.Decimal(10, 2)
   createdAt    DateTime         @default(now())
+  variantId    String
+  variantName  String?
   orders       orders           @relation(fields: [orderId], references: [id], onDelete: Cascade)
   variant      product_variants @relation(fields: [variantId], references: [id])
 
@@ -143,14 +143,14 @@ model orders {
   cancelReason         String?
   refundedAt           DateTime?
   refundAmount         Decimal?      @db.Decimal(10, 2)
-  couponId             String? // 使用的优惠券
   createdAt            DateTime      @default(now())
   updatedAt            DateTime
   customerId           String
+  couponId             String?
   order_items          order_items[]
   addresses            addresses?    @relation(fields: [addressId], references: [id])
-  customers            customers     @relation(fields: [customerId], references: [id])
   coupons              coupons?      @relation(fields: [couponId], references: [id])
+  customers            customers     @relation(fields: [customerId], references: [id])
 
   @@index([createdAt])
   @@index([customerId])
@@ -163,11 +163,11 @@ model product_images {
   id        String   @id
   productId String
   url       String
-  publicId  String? // Cloudinary public_id for deletion
-  isCover   Boolean  @default(false)
   altText   String?
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
+  isCover   Boolean  @default(false)
+  publicId  String?
   products  products @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId])
@@ -177,53 +177,51 @@ model products {
   id                 String               @id @default(uuid())
   name               String
   slug               String               @unique
-  description        String?              @db.Text
-  thumbnail          String? // 产品封面图/缩略图,用于列表展示
-  status             ProductStatus        @default(DRAFT) // 产品状态
-  publishedAt        DateTime? // 发布时间
+  description        String?
   isActive           Boolean              @default(true)
   isFeatured         Boolean              @default(false)
   isNew              Boolean              @default(false)
   metaTitle          String?
   metaDescription    String?
-  // 统计字段
-  viewCount          Int                  @default(0) // 浏览次数
-  salesCount         Int                  @default(0) // 销量
-  reviewCount        Int                  @default(0) // 评论数
-  avgRating          Decimal?             @db.Decimal(3, 2) // 平均评分 (0.00-5.00)
-  wishlistCount      Int                  @default(0) // 收藏数
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
-  variants           product_variants[]
-  product_images     product_images[]
-  reviews            reviews[]
-  wishlist_items     wishlist_items[]
-  product_tags       product_tags[]
+  avgRating          Decimal?             @db.Decimal(3, 2)
+  publishedAt        DateTime?
+  reviewCount        Int                  @default(0)
+  salesCount         Int                  @default(0)
+  status             ProductStatus        @default(DRAFT)
+  thumbnail          String?
+  viewCount          Int                  @default(0)
+  wishlistCount      Int                  @default(0)
+  categories         product_categories[]
   product_faqs       product_faqs[]
+  product_images     product_images[]
+  product_tags       product_tags[]
+  variants           product_variants[]
   promotion_products promotion_products[]
   related_from       related_products[]   @relation("ProductRelations")
   related_to         related_products[]   @relation("RelatedToProduct")
-  categories         product_categories[]
+  reviews            reviews[]
+  wishlist_items     wishlist_items[]
 
   @@index([status])
   @@index([isActive])
   @@index([isFeatured])
   @@index([slug])
   @@index([publishedAt])
-  @@index([salesCount]) // 按销量排序
-  @@index([avgRating]) // 按评分排序
-  @@index([viewCount]) // 按浏览量排序
+  @@index([salesCount])
+  @@index([avgRating])
+  @@index([viewCount])
 }
 
 model product_categories {
   productId  String
   categoryId String
-  isPrimary  Boolean  @default(false) // 是否为主分类
-  sortOrder  Int      @default(0) // 排序
-  createdAt  DateTime @default(now())
-
-  product  products   @relation(fields: [productId], references: [id], onDelete: Cascade)
-  category categories @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  isPrimary  Boolean    @default(false)
+  sortOrder  Int        @default(0)
+  createdAt  DateTime   @default(now())
+  category   categories @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  product    products   @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@id([productId, categoryId])
   @@index([productId])
@@ -231,46 +229,41 @@ model product_categories {
   @@index([isPrimary])
 }
 
-// 新增:产品变体表(SKU级别)
 model product_variants {
   id                 String               @id @default(uuid())
   productId          String
   sku                String               @unique
   barcode            String?
-  name               String? // 变体名称,如 "大号-红色"
+  name               String?
   price              Decimal              @db.Decimal(10, 2)
   compareAtPrice     Decimal?             @db.Decimal(10, 2)
   cost               Decimal?             @db.Decimal(10, 2)
   inventory          Int                  @default(0)
   lowStockThreshold  Int                  @default(5)
   trackInventory     Boolean              @default(true)
-  // 变体属性
-  size               String? // S/M/L/XL 或 具体尺寸
-  color              String? // 颜色
-  material           String? // 材质(手链场景:和田玉、翡翠等)
-  weight             Float? // 重量
-  // 其他属性可用 JSON 存储
-  attributes         Json? // {bead_diameter: 8, length: 18, ...}
-  isDefault          Boolean              @default(false) // 是否为默认变体
+  size               String?
+  color              String?
+  material           String?
+  weight             Float?
+  attributes         Json?
+  isDefault          Boolean              @default(false)
   sortOrder          Int                  @default(0)
   isActive           Boolean              @default(true)
-  // 统计字段
-  salesCount         Int                  @default(0) // 该变体销量
+  salesCount         Int                  @default(0)
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
-  product            products             @relation(fields: [productId], references: [id], onDelete: Cascade)
   cart_items         cart_items[]
   order_items        order_items[]
-  variant_images     variant_images[]
+  product            products             @relation(fields: [productId], references: [id], onDelete: Cascade)
   promotion_products promotion_products[]
+  variant_images     variant_images[]
 
   @@index([productId])
   @@index([sku])
   @@index([isActive])
-  @@index([salesCount]) // 按销量排序
+  @@index([salesCount])
 }
 
-// 新增:变体图片表(可选,如果不同变体有不同图片)
 model variant_images {
   id        String           @id @default(uuid())
   variantId String
@@ -316,15 +309,14 @@ model wishlist_items {
   @@index([productId])
 }
 
-// 新增:标签表
 model tags {
   id           String         @id @default(uuid())
   name         String?        @unique
   slug         String         @unique
   description  String?
-  color        String? // 标签颜色,用于前端展示(如: #3B82F6)
+  color        String?
   isActive     Boolean        @default(true)
-  createdBy    String? // 创建者ID
+  createdBy    String?
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
   product_tags product_tags[]
@@ -334,7 +326,6 @@ model tags {
   @@index([createdBy])
 }
 
-// 新增:产品-标签关联表(多对多关系)
 model product_tags {
   id        String   @id @default(uuid())
   productId String
@@ -343,65 +334,23 @@ model product_tags {
   products  products @relation(fields: [productId], references: [id], onDelete: Cascade)
   tags      tags     @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
-  @@unique([productId, tagId]) // 防止重复关联
+  @@unique([productId, tagId])
   @@index([productId])
   @@index([tagId])
 }
 
-enum OrderStatus {
-  PENDING
-  PROCESSING
-  SHIPPED
-  DELIVERED
-  CANCELLED
-  REFUNDED
-}
-
-enum PaymentStatus {
-  PENDING
-  PAID
-  FAILED
-  REFUNDED
-}
-
-enum ProductStatus {
-  DRAFT // 草稿
-  ACTIVE // 已上架
-  ARCHIVED // 已下架
-}
-
-enum PromotionType {
-  PERCENTAGE // 百分比折扣
-  FIXED_AMOUNT // 固定金额
-  BUY_X_GET_Y // 买X送Y
-  FREE_SHIPPING // 免运费
-}
-
-enum CouponType {
-  PERCENTAGE // 百分比折扣
-  FIXED_AMOUNT // 固定金额
-  FREE_SHIPPING // 免运费
-}
-
-enum RelationType {
-  RELATED // 相关产品
-  UPSELL // 升级推荐(更贵的替代品)
-  CROSS_SELL // 交叉销售(配件、搭配)
-}
-
-// ============ 促销系统 ============
 model promotions {
   id                 String               @id @default(uuid())
   name               String
-  description        String?              @db.Text
+  description        String?
   type               PromotionType
-  value              Decimal              @db.Decimal(10, 2) // 折扣值或金额
+  value              Decimal              @db.Decimal(10, 2)
   startDate          DateTime
   endDate            DateTime
   isActive           Boolean              @default(true)
-  minPurchase        Decimal?             @db.Decimal(10, 2) // 最低购买金额
-  maxDiscount        Decimal?             @db.Decimal(10, 2) // 最大折扣金额
-  usageLimit         Int? // 总使用次数限制
+  minPurchase        Decimal?             @db.Decimal(10, 2)
+  maxDiscount        Decimal?             @db.Decimal(10, 2)
+  usageLimit         Int?
   usageCount         Int                  @default(0)
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
@@ -418,8 +367,8 @@ model promotion_products {
   productId   String?
   variantId   String?
   createdAt   DateTime          @default(now())
-  promotion   promotions        @relation(fields: [promotionId], references: [id], onDelete: Cascade)
   product     products?         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  promotion   promotions        @relation(fields: [promotionId], references: [id], onDelete: Cascade)
   variant     product_variants? @relation(fields: [variantId], references: [id], onDelete: Cascade)
 
   @@index([promotionId])
@@ -427,17 +376,16 @@ model promotion_products {
   @@index([variantId])
 }
 
-// ============ 优惠券系统 ============
 model coupons {
   id                    String          @id @default(uuid())
   code                  String          @unique
-  description           String?         @db.Text
+  description           String?
   type                  CouponType
   value                 Decimal         @db.Decimal(10, 2)
-  minPurchase           Decimal?        @db.Decimal(10, 2) // 最低消费
-  maxDiscount           Decimal?        @db.Decimal(10, 2) // 最大折扣
-  usageLimit            Int? // 总使用次数限制
-  usageLimitPerCustomer Int? // 每个用户使用次数限制
+  minPurchase           Decimal?        @db.Decimal(10, 2)
+  maxDiscount           Decimal?        @db.Decimal(10, 2)
+  usageLimit            Int?
+  usageLimitPerCustomer Int?
   usageCount            Int             @default(0)
   startDate             DateTime
   endDate               DateTime
@@ -466,12 +414,11 @@ model coupon_usages {
   @@index([orderId])
 }
 
-// ============ 产品问答 ============
 model product_faqs {
   id        String   @id @default(uuid())
   productId String
-  question  String   @db.Text
-  answer    String   @db.Text
+  question  String
+  answer    String
   sortOrder Int      @default(0)
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
@@ -482,7 +429,6 @@ model product_faqs {
   @@index([isActive])
 }
 
-// ============ 关联产品 ============
 model related_products {
   id               String       @id @default(uuid())
   productId        String
@@ -496,4 +442,45 @@ model related_products {
   @@unique([productId, relatedProductId])
   @@index([productId])
   @@index([type])
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum PromotionType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  BUY_X_GET_Y
+  FREE_SHIPPING
+}
+
+enum CouponType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  FREE_SHIPPING
+}
+
+enum RelationType {
+  RELATED
+  UPSELL
+  CROSS_SELL
 }

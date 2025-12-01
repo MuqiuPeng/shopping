@@ -83,7 +83,10 @@ const ProductDetailView = ({ productId, reviews }: ProductDetailViewProps) => {
   // handlers
   // =================================
   const handleQuantityChange = (change: number) => {
-    // setQuantity(Math.max(1, Math.min(product.stockCount, quantity + change)));
+    setQuantity((prev) => {
+      const newQuantity = prev + change;
+      return Math.max(1, newQuantity);
+    });
   };
 
   const handleVariantSelect = (id: string) => {
@@ -225,7 +228,7 @@ const ProductDetailView = ({ productId, reviews }: ProductDetailViewProps) => {
                     <button
                       onClick={() => handleQuantityChange(1)}
                       className="p-2 hover:bg-secondary transition-colors"
-                      // disabled={quantity >= product.stockCount}
+                      // disabled={quantity >= product.stockCount} // 之后再确定是否需要这个部分
                     >
                       <Plus className="w-4 h-4" />
                     </button>
