@@ -156,4 +156,156 @@
   [data-sonner-toast][data-styled="true"][data-type="error"] {
     border-left: 3px solid var(--destructive);
   }
+
+  /* Prose Rich Text Styling */
+  .prose {
+    color: var(--foreground);
+  }
+
+  .prose p {
+    color: var(--foreground);
+    margin-bottom: 0.5rem;
+  }
+
+  .prose h1,
+  .prose h2,
+  .prose h3,
+  .prose h4,
+  .prose h5,
+  .prose h6 {
+    color: var(--foreground);
+    font-weight: 600;
+    margin-top: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .prose h1 {
+    font-size: 2.25rem;
+  }
+
+  .prose h2 {
+    font-size: 1.875rem;
+  }
+
+  .prose h3 {
+    font-size: 1.5rem;
+  }
+
+  .prose strong,
+  .prose b {
+    color: var(--foreground);
+    font-weight: 700;
+  }
+
+  .prose em,
+  .prose i {
+    color: var(--foreground);
+  }
+
+  .prose ol,
+  .prose ul {
+    color: var(--foreground);
+    margin-bottom: 0.5rem;
+    margin-left: 1.25rem;
+  }
+
+  .prose ol li,
+  .prose ul li {
+    color: var(--foreground);
+    margin-bottom: 0.25rem;
+  }
+
+  .prose li p {
+    margin-bottom: 0.5rem;
+  }
+
+  .prose a {
+    color: var(--accent);
+    text-decoration: underline;
+  }
+
+  .prose a:hover {
+    color: var(--accent);
+    opacity: 0.8;
+  }
+
+  .prose blockquote {
+    color: var(--muted-foreground);
+    border-left-color: var(--border);
+    font-style: italic;
+    margin-bottom: 0.5rem;
+  }
+
+  .prose code {
+    color: var(--foreground);
+    background-color: var(--secondary);
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-family: monospace;
+  }
+
+  .prose pre {
+    background-color: var(--secondary);
+    color: var(--foreground);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin-bottom: 0.5rem;
+  }
+
+  .prose hr {
+    border-color: var(--border);
+    margin: 0.75rem 0;
+  }
+
+  .dark .prose {
+    color: var(--foreground);
+  }
+
+  .dark .prose p {
+    color: var(--foreground);
+  }
+
+  .dark .prose h1,
+  .dark .prose h2,
+  .dark .prose h3,
+  .dark .prose h4,
+  .dark .prose h5,
+  .dark .prose h6 {
+    color: var(--foreground);
+  }
+
+  .dark .prose strong,
+  .dark .prose b {
+    color: var(--foreground);
+  }
+
+  .dark .prose ol,
+  .dark .prose ul {
+    color: var(--foreground);
+  }
+
+  .dark .prose ol li,
+  .dark .prose ul li {
+    color: var(--foreground);
+  }
+
+  .dark .prose a {
+    color: var(--accent);
+  }
+
+  .dark .prose blockquote {
+    color: var(--muted-foreground);
+    border-left-color: var(--border);
+  }
+
+  .dark .prose code {
+    background-color: var(--secondary);
+    color: var(--foreground);
+  }
+
+  .dark .prose pre {
+    background-color: var(--secondary);
+    color: var(--foreground);
+  }
 }

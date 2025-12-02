@@ -8,9 +8,10 @@ import {
   CardTitle
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useProductForm } from '../context/product-form-context';
+import RichTextEditor from '@/components/rich-text-editor';
+import { toStringOrEmpty } from '@/utils';
 
 export default function ProductBasicInfo() {
   const { form } = useProductForm();
@@ -22,6 +23,7 @@ export default function ProductBasicInfo() {
   } = form;
 
   const name = watch('name');
+  const description = watch('description');
 
   const generateSlug = () => {
     const slug = name
@@ -86,19 +88,20 @@ export default function ProductBasicInfo() {
         </div>
 
         <div className='space-y-2'>
-          <Label htmlFor='description' className='text-sm font-medium'>
-            Description
-          </Label>
-          <Textarea
-            id='description'
-            {...register('description')}
+          <Label htmlFor='description'>Description</Label>
+
+          <RichTextEditor
+            value={toStringOrEmpty(description)}
+            onChange={(value: string) =>
+              setValue('description', value, { shouldDirty: true })
+            }
             placeholder='Describe your product in detail...'
-            rows={5}
-            className='resize-none text-base'
           />
-          <p className='text-muted-foreground text-xs'>
-            Rich description helps customers understand your product
-          </p>
+          {errors.description && (
+            <p className='text-destructive text-sm'>
+              {errors.description.message}
+            </p>
+          )}
         </div>
       </CardContent>
     </Card>

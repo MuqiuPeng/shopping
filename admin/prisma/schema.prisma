@@ -28,11 +28,11 @@ model addresses {
 }
 
 model cart_items {
-  id        String           @id
+  id        String           @id @default(cuid())
   cartId    String
   quantity  Int              @default(1)
   createdAt DateTime         @default(now())
-  updatedAt DateTime
+  updatedAt DateTime         @updatedAt
   variantId String
   carts     carts            @relation(fields: [cartId], references: [id], onDelete: Cascade)
   variant   product_variants @relation(fields: [variantId], references: [id], onDelete: Cascade)

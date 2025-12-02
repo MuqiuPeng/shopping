@@ -1,6 +1,6 @@
-export const handleNullValue = (value: unknown): string => {
+export const toStringOrEmpty = (value: unknown): string => {
   if (value === null || value === undefined) {
-    return "";
+    return '';
   }
 
   return String(value);

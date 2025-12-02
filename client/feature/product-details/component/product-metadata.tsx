@@ -1,6 +1,7 @@
 "use client";
 
 import { Star, MessageCircle } from "lucide-react";
+import { useState } from "react";
 
 interface Review {
   id: number;
@@ -11,40 +12,70 @@ interface Review {
   verified: boolean;
 }
 
-interface Product {
-  description: string;
-  features: string[];
-  materials: string;
-  care: string;
-  reviewCount: number;
+interface ProductMetadataProps {
+  description?: string;
+  reviews?: Review[];
 }
 
-interface ProductMetadataProps {
-  product: Product;
-  reviews: Review[];
-  activeTab: string;
-  onTabChange: (tabId: string) => void;
-}
+// Mock reviews data
+const mockReviews: Review[] = [
+  {
+    id: 1,
+    name: "Sarah Johnson",
+    rating: 5,
+    date: "December 1, 2024",
+    comment:
+      "Absolutely stunning bracelet! The pearls are high quality and the craftsmanship is excellent. I wear it every day and receive so many compliments.",
+    verified: true,
+  },
+  {
+    id: 2,
+    name: "Emily Chen",
+    rating: 5,
+    date: "November 28, 2024",
+    comment:
+      "Perfect gift for my mother. She loves it! The packaging was beautiful and the bracelet exceeded expectations.",
+    verified: true,
+  },
+  {
+    id: 3,
+    name: "Michael Rodriguez",
+    rating: 4,
+    date: "November 25, 2024",
+    comment:
+      "Beautiful bracelet, my wife loves it. The only reason for 4 stars instead of 5 is that it took a bit longer to arrive than expected.",
+    verified: false,
+  },
+  {
+    id: 4,
+    name: "Jennifer Lee",
+    rating: 5,
+    date: "November 20, 2024",
+    comment:
+      "Elegant and timeless design. The quality is outstanding and it's very comfortable to wear all day long.",
+    verified: true,
+  },
+];
 
 const ProductMetadata = ({
-  product,
-  reviews,
-  activeTab,
-  onTabChange,
+  description = "No Description.",
+  reviews = mockReviews,
 }: ProductMetadataProps) => {
+  const [activeTab, setActiveTab] = useState("description");
+
+  const tabs = [
+    { id: "description", name: "Description" },
+    { id: "reviews", name: `Reviews (${reviews.length})` },
+  ];
+
   return (
     <div className="mt-16">
       <div className="border-b border-border">
         <nav className="flex space-x-8">
-          {[
-            { id: "description", name: "Description" },
-            { id: "features", name: "Features" },
-            { id: "care", name: "Care Instructions" },
-            { id: "reviews", name: `Reviews (${product.reviewCount})` },
-          ].map((tab) => (
+          {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => onTabChange(tab.id)}
+              onClick={() => setActiveTab(tab.id)}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === tab.id
                   ? "border-primary text-primary"
@@ -59,40 +90,10 @@ const ProductMetadata = ({
 
       <div className="py-8">
         {activeTab === "description" && (
-          <div className="prose prose-gray max-w-none">
-            <p className="text-foreground leading-relaxed">
-              {product.description}
-            </p>
-          </div>
-        )}
-
-        {activeTab === "features" && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium text-foreground">
-              Product Features
-            </h3>
-            <ul className="space-y-2">
-              {product.features.map((feature, index) => (
-                <li key={index} className="flex items-start space-x-3">
-                  <div className="w-2 h-2 bg-accent rounded-full mt-2 shrink-0" />
-                  <span className="text-foreground">{feature}</span>
-                </li>
-              ))}
-            </ul>
-            <div className="mt-6 space-y-2">
-              <h4 className="font-medium text-foreground">Materials</h4>
-              <p className="text-muted-foreground">{product.materials}</p>
-            </div>
-          </div>
-        )}
-
-        {activeTab === "care" && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium text-foreground">
-              Care Instructions
-            </h3>
-            <p className="text-foreground leading-relaxed">{product.care}</p>
-          </div>
+          <div
+            className="prose prose-sm dark:prose-invert max-w-none text-foreground leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: description ?? "" }}
+          />
         )}
 
         {activeTab === "reviews" && (

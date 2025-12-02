@@ -20,8 +20,8 @@ import ProductNotFound from "../component/product-not-found";
 import ProductLoading from "../component/product-loading";
 import { cn } from "@/lib/utils";
 import { product_variants } from "@prisma/client";
-import { handleNullOrUndefinedValue } from "../../../utils/handle-null-value";
-import { handleDecimal, handleEmptyArray } from "@/utils";
+
+import { handleDecimal, handleEmptyArray, toStringOrEmpty } from "@/utils";
 import useCart, { AddToCartInput } from "../hooks/use-cart";
 import useSWR from "swr";
 import { getCartItemsByVariantAction } from "@/app/actions/cart.action";
@@ -73,6 +73,7 @@ const ProductDetailView = ({ productId, reviews }: ProductDetailViewProps) => {
   // hooks
   // =================================
   const { data, isLoading, error } = useProduceData(productId);
+
   const { selectedImage, setSelectedImage, nextImage, prevImage, setShowZoom } =
     useGallery(data?.product_images?.length || 1);
   const { addToCart } = useCart();
@@ -157,7 +158,7 @@ const ProductDetailView = ({ productId, reviews }: ProductDetailViewProps) => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <Header
-        productName={handleNullOrUndefinedValue(data?.name)}
+        productName={toStringOrEmpty(data?.name)}
         isFavorite={isFavorite}
         onToggleFavorite={() => setIsFavorite(!isFavorite)}
       />
@@ -167,7 +168,7 @@ const ProductDetailView = ({ productId, reviews }: ProductDetailViewProps) => {
           {/* Product Gallery */}
           <Gallery
             images={handleEmptyArray(data?.product_images)}
-            productName={handleNullOrUndefinedValue(data?.name)}
+            productName={toStringOrEmpty(data?.name)}
             // sale={product.sale}
             sale={true}
             // salePercentage={product.salePercentage}
@@ -198,7 +199,7 @@ const ProductDetailView = ({ productId, reviews }: ProductDetailViewProps) => {
                 </div>
               </div>
               <h1 className="text-3xl font-light tracking-tight text-foreground mb-4">
-                {handleNullOrUndefinedValue(data?.name)}
+                {toStringOrEmpty(data?.name)}
               </h1>
 
               <div className="flex items-center space-x-3 mb-6">
@@ -320,12 +321,12 @@ const ProductDetailView = ({ productId, reviews }: ProductDetailViewProps) => {
         </div>
 
         {/* Product Details Tabs */}
-        {/* <ProductMetadata
-          product={product}
+        <ProductMetadata
+          description={toStringOrEmpty(data?.description)}
           reviews={reviews}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-        /> */}
+          // activeTab={activeTab}
+          // onTabChange={setActiveTab}
+        />
 
         {/* Related Products */}
         <div className="mt-16">
