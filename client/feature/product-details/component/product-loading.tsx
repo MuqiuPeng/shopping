@@ -22,7 +22,7 @@ const ProductLoading = () => {
           <div className="space-y-4">
             {/* Main Image */}
             <div className="relative aspect-square overflow-hidden rounded-2xl bg-secondary animate-pulse">
-              <div className="absolute inset-0 bg-gradient-to-br from-secondary via-secondary/50 to-secondary/30 animate-shimmer"></div>
+              <div className="absolute inset-0 bg-linear-to-br from-secondary via-secondary/50 to-secondary/30 animate-shimmer"></div>
             </div>
 
             {/* Thumbnail Gallery */}
@@ -35,7 +35,7 @@ const ProductLoading = () => {
                     animationDelay: `${i * 0.1}s`,
                   }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-secondary via-secondary/50 to-secondary/30 animate-shimmer"></div>
+                  <div className="absolute inset-0 bg-linear-to-br from-secondary via-secondary/50 to-secondary/30 animate-shimmer"></div>
                 </div>
               ))}
             </div>
@@ -169,7 +169,7 @@ const ProductLoading = () => {
                 }}
               >
                 <div className="aspect-square w-full bg-secondary rounded-lg animate-pulse">
-                  <div className="absolute inset-0 bg-gradient-to-br from-secondary via-secondary/50 to-secondary/30 animate-shimmer"></div>
+                  <div className="absolute inset-0 bg-linear-to-br from-secondary via-secondary/50 to-secondary/30 animate-shimmer"></div>
                 </div>
                 <div className="space-y-2">
                   <div className="h-4 w-full bg-secondary rounded animate-pulse"></div>

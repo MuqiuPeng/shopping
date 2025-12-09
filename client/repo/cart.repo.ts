@@ -160,4 +160,79 @@ export class CartRepo {
   //     });
   //   }
   // }
+
+  static async fetchCartItemsByCustomerClerkId(customerClerkId: string) {
+    if (!customerClerkId) throw new Error("customerClerkId is required");
+
+    const customer = await db.customers.findUnique({
+      where: { clerkId: customerClerkId },
+    });
+
+    if (!customer) {
+      throw new Error(`Customer with clerkId ${customerClerkId} not found`);
+    }
+    const customerId = customer.id;
+
+    const cart = await db.carts.findUnique({
+      where: {
+        customerId,
+      },
+      include: {
+        items: {
+          include: {
+            variant: {
+              include: {
+                product: {
+                  select: {
+                    id: true,
+                    name: true,
+                    slug: true,
+                    thumbnail: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!cart) {
+      return null;
+    }
+
+    return cart;
+  }
+
+  static async fetchCartItemByVariantId({
+    customerClerkId,
+    variantId,
+  }: {
+    customerClerkId: string;
+    variantId: string;
+  }) {
+    if (!customerClerkId) throw new Error("customerClerkId is required");
+
+    const customer = await db.customers.findUnique({
+      where: { clerkId: customerClerkId },
+    });
+
+    if (!customer) {
+      throw new Error(`Customer with clerkId ${customerClerkId} not found`);
+    }
+    const customerId = customer.id;
+
+    const cart = await db.carts.findUnique({
+      where: { customerId },
+    });
+
+    if (!cart) {
+      return null;
+    }
+
+    return await db.cart_items.findFirst({
+      where: { cartId: cart.id, variantId },
+      orderBy: { updatedAt: "desc" },
+    });
+  }
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import ProductDetailView from "@/feature/product-details/view/product-detail-view";
+import { ProductDetailView } from "@/feature/product-details/view/product-detail-view";
 
 // Sample product data (in real app, this would come from API)
 interface Product {

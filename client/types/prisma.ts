@@ -46,6 +46,56 @@ export type {
 /**
  * 常用的组合类型
  */
+
+/**
+ * 购物车与商品详情 - 用于展示完整购物车信息
+ * 包含：cart -> items -> variant -> product
+ */
+export type CartWithItems = {
+  id: string;
+  customerId: string;
+  createdAt: Date;
+  updatedAt: Date;
+  items: {
+    id: string;
+    cartId: string;
+    variantId: string;
+    quantity: number;
+    createdAt: Date;
+    updatedAt: Date;
+    variant: {
+      id: string;
+      productId: string;
+      sku: string;
+      barcode: string | null;
+      name: string | null;
+      price: any; // Decimal
+      compareAtPrice: any | null; // Decimal
+      cost: any | null; // Decimal
+      inventory: number;
+      lowStockThreshold: number;
+      trackInventory: boolean;
+      size: string | null;
+      color: string | null;
+      material: string | null;
+      weight: number | null;
+      attributes: any; // Json
+      isDefault: boolean;
+      sortOrder: number;
+      isActive: boolean;
+      salesCount: number;
+      createdAt: Date;
+      updatedAt: Date;
+      product: {
+        id: string;
+        name: string;
+        slug: string;
+        thumbnail: string | null;
+      };
+    };
+  }[];
+};
+
 export type ProductWithVariants = {
   id: string;
   name: string;

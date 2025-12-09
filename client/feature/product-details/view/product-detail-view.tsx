@@ -24,7 +24,7 @@ import { product_variants } from "@prisma/client";
 import { handleDecimal, handleEmptyArray, toStringOrEmpty } from "@/utils";
 import useCart, { AddToCartInput } from "../hooks/use-cart";
 import useSWR from "swr";
-import { getCartItemsByVariantAction } from "@/app/actions/cart.action";
+import { fetchCartItemCountByVariantAction } from "@/app/actions/cart.action";
 
 interface Product {
   id: number;
@@ -59,7 +59,10 @@ interface ProductDetailViewProps {
   reviews: Review[];
 }
 
-const ProductDetailView = ({ productId, reviews }: ProductDetailViewProps) => {
+export const ProductDetailView = ({
+  productId,
+  reviews,
+}: ProductDetailViewProps) => {
   // =================================
   // state
   // =================================
@@ -125,13 +128,13 @@ const ProductDetailView = ({ productId, reviews }: ProductDetailViewProps) => {
     async () => {
       if (!selectedVariantId) return null;
 
-      return await getCartItemsByVariantAction({
+      return await fetchCartItemCountByVariantAction({
         variantId: selectedVariantId,
       });
     },
     {
       onSuccess: (data) => {
-        const quantity = data?.cartItems?.quantity;
+        const quantity = data?.cartItemCount?.quantity;
         if (quantity) {
           setQuantity(quantity);
         } else {
@@ -341,5 +344,3 @@ const ProductDetailView = ({ productId, reviews }: ProductDetailViewProps) => {
     </div>
   );
 };
-
-export default ProductDetailView;

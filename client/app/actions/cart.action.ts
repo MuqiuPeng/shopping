@@ -42,8 +42,26 @@ export const updateCartInfoAction = async (
 export interface GetCartItemsByVariantInput {
   variantId: string;
 }
+export const fetchCartItemsByCustomerClerkIdAction = async () => {
+  try {
+    const user = await currentUser();
 
-export const getCartItemsByVariantAction = async (
+    if (!user) {
+      return { error: "User not logged in" };
+    }
+
+    const cartItems = await CartRepo.fetchCartItemsByCustomerClerkId(user.id);
+
+    return { cartItems };
+  } catch (error) {
+    console.log(`Failed to fetch cart items: ${(error as Error).message}`);
+    throw new Error(`Failed to fetch cart items`);
+  }
+};
+
+/* Get user cart item by variant ID */
+// to support product details pages "Add to cart" button
+export const fetchCartItemCountByVariantAction = async (
   input: GetCartItemsByVariantInput
 ) => {
   try {
@@ -53,14 +71,14 @@ export const getCartItemsByVariantAction = async (
       return { error: "User not logged in" };
     }
 
-    const cartItems = await CartRepo.getCustomerCartItemsByVariant({
+    const cartItemCount = await CartRepo.fetchCartItemByVariantId({
       customerClerkId: user.id,
       variantId: input.variantId,
     });
 
-    return { cartItems };
+    return { cartItemCount };
   } catch (error) {
-    console.log(`Failed to fetch cart items: ${(error as Error).message}`);
-    throw new Error(`Failed to fetch cart items`);
+    console.log(`Failed to fetch cart item: ${(error as Error).message}`);
+    throw new Error(`Failed to fetch cart item`);
   }
 };
