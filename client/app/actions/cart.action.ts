@@ -52,7 +52,26 @@ export const fetchCartItemsByCustomerClerkIdAction = async () => {
 
     const cartItems = await CartRepo.fetchCartItemsByCustomerClerkId(user.id);
 
-    return { cartItems };
+    const processedCartItems = cartItems
+      ? {
+          ...cartItems,
+          items: cartItems.items.map((item) => {
+            return {
+              ...item,
+              variant: {
+                ...item.variant,
+                price: item.variant.price.toString(),
+                compareAtPrice: item.variant.compareAtPrice
+                  ? item.variant.compareAtPrice.toString()
+                  : null,
+                cost: item.variant.cost ? item.variant.cost.toString() : null,
+              },
+            };
+          }),
+        }
+      : null;
+
+    return { cartItems: processedCartItems };
   } catch (error) {
     console.log(`Failed to fetch cart items: ${(error as Error).message}`);
     throw new Error(`Failed to fetch cart items`);
@@ -71,7 +90,7 @@ export const fetchCartItemCountByVariantAction = async (
       return { error: "User not logged in" };
     }
 
-    const cartItemCount = await CartRepo.fetchCartItemByVariantId({
+    const cartItemCount = await CartRepo.getCartItemQuantityForVariant({
       customerClerkId: user.id,
       variantId: input.variantId,
     });

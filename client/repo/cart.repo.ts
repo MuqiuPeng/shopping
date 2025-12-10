@@ -143,24 +143,8 @@ export class CartRepo {
       orderBy: { updatedAt: "desc" },
     });
   }
-  // static async mergeLocalCartToCustomerCart({
-  //   customerId,
-  //   localItems,
-  // }: {
-  //   customerId: string;
-  //   localItems: Array<{ variantId: string; quantity: number }>;
-  // }) {
-  //   if (!localItems?.length) return;
 
-  //   for (const item of localItems) {
-  //     await this.customerAddingCart({
-  //       customerId,
-  //       variantId: item.variantId,
-  //       quantity: item.quantity,
-  //     });
-  //   }
-  // }
-
+  // host/cart 页面获取购物车及其商品详情
   static async fetchCartItemsByCustomerClerkId(customerClerkId: string) {
     if (!customerClerkId) throw new Error("customerClerkId is required");
 
@@ -204,7 +188,8 @@ export class CartRepo {
     return cart;
   }
 
-  static async fetchCartItemByVariantId({
+  // 用户获取商品详情页面中正确的 cart 数量
+  static async getCartItemQuantityForVariant({
     customerClerkId,
     variantId,
   }: {
