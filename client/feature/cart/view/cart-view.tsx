@@ -11,6 +11,8 @@ import PriceCalculator from "../component/price-calculator";
 import CartLoading from "../component/cart-loading";
 import useUpdateCart from "../hook/use-update-cart.";
 import useRemoveItemFromCart from "../hook/use-remove-item-from-cart";
+import usePriceCalculator from "../hook/use-price-calculator";
+import { CartWithItems } from "@/types/prisma";
 
 // Sample cart data
 interface CartItem {
@@ -30,6 +32,7 @@ export default function CartView() {
   const [appliedPromo, setAppliedPromo] = useState<string | null>(null);
 
   const { cart, error, isLoading, mutate } = useCartData();
+  console.log("cart: ", cart);
   const {
     updateCart,
     isLoading: updateCartLoading,
@@ -43,7 +46,7 @@ export default function CartView() {
 
   // Map API data to CartItem format
   const cartItems: CartItem[] =
-    cart?.items?.map((item: any) => ({
+    (cart as CartWithItems)?.items?.map((item) => ({
       id: item.id,
       name: item.variant?.product?.name || "Unknown Product",
       price: parseFloat(item.variant?.price || "0"),
@@ -58,28 +61,37 @@ export default function CartView() {
     })) || [];
 
   const updateQuantity = async (id: string, newQuantity: number) => {
-    try {
-      await updateCart({
-        quantity: newQuantity,
-        variantId: id,
-      });
+    const result = await updateCart({
+      quantity: newQuantity,
+      variantId: id,
+    });
+
+    if (result.success) {
       await mutate();
-    } catch (error) {
-      toast.error("Failed to add to cart", {
-        description: "Please try again later",
+      toast.success("Cart updated", {
+        description: "Quantity has been updated",
+        duration: 2000,
+      });
+    } else {
+      toast.error("Failed to update cart", {
+        description: result.error || "Please try again later",
         duration: 3000,
       });
     }
   };
 
-  const removeItemHandler = (variantId: string) => {
-    try {
-      console.log(variantId);
-      removeItem({ variantId });
-      mutate();
-    } catch (error) {
-      toast.error("Failed to add to cart", {
-        description: "Please try again later",
+  const removeItemHandler = async (variantId: string) => {
+    const result = await removeItem({ variantId });
+
+    if (result.success) {
+      await mutate();
+      toast.success("Item removed", {
+        description: "Item has been removed from your cart",
+        duration: 2000,
+      });
+    } else {
+      toast.error("Failed to remove item", {
+        description: result.error || "Please try again later",
         duration: 3000,
       });
     }
@@ -97,17 +109,20 @@ export default function CartView() {
     }
   };
 
-  const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
-  const discount = appliedPromo === "PEARL10" ? subtotal * 0.1 : 0;
-  const shipping = subtotal >= 50 ? 0 : 9.99;
-  const tax = (subtotal - discount) * 0.08;
-  const total = subtotal - discount + shipping + tax;
-
-  const outOfStockItems = cartItems.filter((item) => !item.inStock);
-  const availableItems = cartItems.filter((item) => item.inStock);
+  // Use price calculator hook
+  const {
+    subtotal,
+    originalSubtotal,
+    productSavings,
+    promoDiscount,
+    totalSavings,
+    shipping,
+    total,
+    availableItemsCount,
+  } = usePriceCalculator({
+    cartItems,
+    appliedPromo,
+  });
 
   if (isLoading || removeItemLoading) {
     return <CartLoading />;
@@ -169,13 +184,15 @@ export default function CartView() {
             {/* Price Calculator */}
             <PriceCalculator
               subtotal={subtotal}
-              discount={discount}
+              originalSubtotal={originalSubtotal}
+              productSavings={productSavings}
+              promoDiscount={promoDiscount}
+              totalSavings={totalSavings}
               shipping={shipping}
-              tax={tax}
               total={total}
               promoCode={promoCode}
               appliedPromo={appliedPromo}
-              availableItemsCount={availableItems.length}
+              availableItemsCount={availableItemsCount}
               onPromoCodeChange={setPromoCode}
               onApplyPromoCode={applyPromoCode}
               onRemovePromo={() => setAppliedPromo(null)}

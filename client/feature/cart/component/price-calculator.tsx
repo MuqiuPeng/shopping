@@ -5,14 +5,16 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 interface PriceCalculatorProps {
-  subtotal: number;
-  discount: number;
-  shipping: number;
-  tax: number;
-  total: number;
-  promoCode: string;
-  appliedPromo: string | null;
-  availableItemsCount: number;
+  subtotal: number; // 当前价格小计
+  originalSubtotal: number; // 原价小计（用于显示节省金额）
+  productSavings: number; // 商品折扣节省金额
+  promoDiscount: number; // 优惠码折扣金额
+  totalSavings: number; // 总节省金额
+  shipping: number; // 运费
+  total: number; // 总计
+  promoCode: string; // 优惠码输入值
+  appliedPromo: string | null; // 已应用的优惠码
+  availableItemsCount: number; // 可购买商品数量
   onPromoCodeChange: (code: string) => void;
   onApplyPromoCode: () => void;
   onRemovePromo: () => void;
@@ -20,9 +22,11 @@ interface PriceCalculatorProps {
 
 export default function PriceCalculator({
   subtotal,
-  discount,
+  originalSubtotal,
+  productSavings,
+  promoDiscount,
+  totalSavings,
   shipping,
-  tax,
   total,
   promoCode,
   appliedPromo,
@@ -80,30 +84,65 @@ export default function PriceCalculator({
         <h3 className="font-medium text-foreground mb-4">Order Summary</h3>
 
         <div className="space-y-3">
+          {/* Original Subtotal (if there are product discounts) */}
+          {productSavings > 0 && (
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Original Price</span>
+              <span className="text-muted-foreground line-through">
+                ${originalSubtotal.toFixed(2)}
+              </span>
+            </div>
+          )}
+
+          {/* Current Subtotal */}
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Subtotal</span>
             <span className="text-foreground">${subtotal.toFixed(2)}</span>
           </div>
 
-          {discount > 0 && (
+          {/* Product Savings */}
+          {productSavings > 0 && (
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Discount</span>
-              <span className="text-accent">-${discount.toFixed(2)}</span>
+              <span className="text-muted-foreground">Product Discount</span>
+              <span className="text-accent font-medium">
+                -${productSavings.toFixed(2)}
+              </span>
             </div>
           )}
 
+          {/* Promo Code Discount */}
+          {promoDiscount > 0 && (
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Promo Code</span>
+              <span className="text-accent font-medium">
+                -${promoDiscount.toFixed(2)}
+              </span>
+            </div>
+          )}
+
+          {/* Shipping */}
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Shipping</span>
             <span className="text-foreground">
-              {shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}
+              {shipping === 0 ? (
+                <span className="text-accent font-medium">Free</span>
+              ) : (
+                `$${shipping.toFixed(2)}`
+              )}
             </span>
           </div>
 
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Tax</span>
-            <span className="text-foreground">${tax.toFixed(2)}</span>
-          </div>
+          {/* Total Savings Summary */}
+          {totalSavings > 0 && (
+            <div className="flex justify-between text-sm p-2 bg-accent/10 rounded-lg">
+              <span className="text-accent font-medium">Total Savings</span>
+              <span className="text-accent font-medium">
+                ${totalSavings.toFixed(2)}
+              </span>
+            </div>
+          )}
 
+          {/* Final Total */}
           <div className="border-t border-border pt-3">
             <div className="flex justify-between">
               <span className="font-medium text-foreground">Total</span>
@@ -121,6 +160,49 @@ export default function PriceCalculator({
             <span className="text-sm text-accent font-medium">
               Free shipping included!
             </span>
+          </div>
+        )}
+
+        {/* Total Savings Banner - 突出显示节省金额 */}
+        {totalSavings && (
+          <div className="relative overflow-hidden bg-linear-to-br from-accent/5 via-accent/10 to-accent/5 border-2 border-accent/20 rounded-xl p-5 mt-4">
+            {/* Background decoration */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 rounded-full -translate-y-16 translate-x-16 blur-3xl" />
+
+            <div className="relative flex items-center justify-between gap-3">
+              <div className="flex items-center gap-4">
+                {/* Icon */}
+                <div className="shrink-0 w-14 h-14 bg-linear-to-br from-accent to-accent/80 rounded-2xl flex items-center justify-center shadow-lg shadow-accent/20">
+                  <Gift className="w-7 h-7 text-accent-foreground" />
+                </div>
+
+                {/* Savings Info */}
+                <div>
+                  <p className="text-xs font-semibold text-accent uppercase tracking-wide mb-1 flex items-center gap-1">
+                    <span className="text-base">✨</span>
+                    You're Saving
+                  </p>
+                  <p className="text-3xl font-bold text-accent tracking-tight">
+                    ${totalSavings.toFixed(2)}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    on this order
+                  </p>
+                </div>
+              </div>
+
+              {/* Discount Badge */}
+              {productSavings > 0 && (
+                <div className="shrink-0 bg-card border-2 border-accent/30 rounded-xl px-4 py-2.5 shadow-sm">
+                  <p className="text-xs text-muted-foreground mb-0.5">
+                    Discount
+                  </p>
+                  <p className="text-2xl font-bold text-accent">
+                    {((productSavings / originalSubtotal) * 100).toFixed(0)}%
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
