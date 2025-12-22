@@ -70,6 +70,39 @@ export const navItems: NavItem[] = [
     ]
   },
   {
+    title: 'Coupon',
+    url: '#',
+    icon: 'couponList',
+    shortcut: ['p', 'p'],
+    isActive: false,
+    items: [
+      {
+        title: 'Coupons',
+        url: '/dashboard/coupons/list',
+        icon: 'couponList',
+        shortcut: ['m', 'm']
+      },
+      {
+        title: 'Coupon Distribution',
+        url: '/dashboard/coupon/distribution',
+        icon: 'couponDistribution',
+        shortcut: ['m', 'm']
+      },
+      {
+        title: 'Usage Tracking',
+        url: '/dashboard/coupon/usage-tracking',
+        icon: 'couponTracking',
+        shortcut: ['m', 'm']
+      },
+      {
+        title: 'Coupon Analytics',
+        url: '/dashboard/coupon/analytics',
+        icon: 'couponAnalysts',
+        shortcut: ['m', 'm']
+      }
+    ]
+  },
+  {
     title: 'Account',
     url: '#', // Placeholder as there is no direct link for the parent
     icon: 'billing',
