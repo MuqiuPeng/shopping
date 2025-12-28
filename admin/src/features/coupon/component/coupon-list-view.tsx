@@ -58,9 +58,7 @@ import { anyToDate } from '../../../utils/any-to-date';
 import { useQueryState, parseAsInteger } from 'nuqs';
 import { useActiveCoupon } from '../hook/use-active-coupon';
 import { useRemoveCoupon } from '../hook/use-remove-coupon';
-import useCouponById from '../hook/use-coupon-by-id';
 import { useUpdateCoupon } from '../hook/use-update-coupon';
-import { delay } from '@/constants/mock-api';
 
 const CouponListView = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -213,8 +211,8 @@ const CouponListView = () => {
 
       setIsCreateModalOpen(false);
 
-      setCouponId('');
-      setEditorMode(null);
+      // setCouponId('');
+      // setEditorMode(null);
 
       await refetch();
     } catch (error) {
@@ -604,13 +602,7 @@ const CouponListView = () => {
       </div>
       <CreateCouponModal
         open={isCreateModalOpen}
-        onOpenChange={(state) => {
-          setIsCreateModalOpen(state);
-          if (!state) {
-            setCouponId('');
-            setEditorMode(null);
-          }
-        }}
+        onOpenChange={setIsCreateModalOpen}
         onCreate={onCreateCoupon}
         onUpdate={onUpdateCoupon}
       />

@@ -123,12 +123,10 @@ export const navItems: NavItem[] = [
     ]
   },
   {
-    title: 'Kanban',
-    url: '/dashboard/kanban',
-    icon: 'kanban',
-    shortcut: ['k', 'k'],
-    isActive: false,
-    items: [] // No child items
+    title: 'Orders',
+    url: '/dashboard/order', // Placeholder as there is no direct link for the parent
+    icon: 'billing',
+    isActive: false
   }
 ];
 

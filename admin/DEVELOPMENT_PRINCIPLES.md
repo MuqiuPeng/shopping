@@ -680,10 +680,626 @@ export async function getItems(params: {
 
 ---
 
+## Page Layout & UI Structure
+
+### Card-Based Layout Pattern
+
+**Rule:** All list/table view pages MUST follow a consistent card-based layout pattern using `PageContainer` and individual `Card` components for each major section.
+
+**Why:**
+
+- Provides visual consistency across all admin pages
+- Creates clear visual separation between different sections
+- Maximizes available screen width for data display
+- Improves readability and user experience
+- Enables responsive design with proper scrolling
+
+**Implementation:**
+
+1. **Page Container Structure:**
+
+   ```typescript
+   import PageContainer from '@/components/layout/page-container';
+
+   export default function ListView() {
+     return (
+       <PageContainer scrollable>
+         <div className='w-full space-y-6'>
+           {/* Page content */}
+         </div>
+       </PageContainer>
+     );
+   }
+   ```
+
+2. **Content Sections with Cards:**
+
+   Each major section (header, filters, table, pagination) should be wrapped appropriately:
+
+   ```typescript
+   <PageContainer scrollable>
+     <div className='w-full space-y-6'>
+       {/* Header - No card needed */}
+       <div>
+         <h1 className='text-foreground text-3xl font-semibold tracking-tight'>
+           Page Title
+         </h1>
+         <p className='text-muted-foreground mt-1 text-sm'>
+           Page description
+         </p>
+       </div>
+
+       {/* Filters - Wrapped in Card */}
+       <Card className='border-border bg-card'>
+         <CardHeader>
+           <CardTitle className='text-base font-medium'>Filters</CardTitle>
+         </CardHeader>
+         <CardContent>
+           {/* Filter inputs */}
+         </CardContent>
+       </Card>
+
+       {/* Data Table - Wrapped in Card */}
+       <Card className='border-border bg-card'>
+         <CardContent className='p-0'>
+           <div className='overflow-x-auto'>
+             <Table>
+               {/* Table content */}
+             </Table>
+           </div>
+         </CardContent>
+       </Card>
+
+       {/* Pagination - Wrapped in Card */}
+       <Card className='border-border bg-card'>
+         <CardContent className='flex items-center justify-between p-4'>
+           {/* Pagination controls */}
+         </CardContent>
+       </Card>
+     </div>
+   </PageContainer>
+   ```
+
+3. **Key CSS Classes:**
+
+   ```typescript
+   // Page container content
+   <div className='w-full space-y-6'>  // Full width + consistent spacing
+
+   // Card wrapper
+   <Card className='border-border bg-card'>  // Consistent border and background
+
+   // Table container (remove default Card padding)
+   <CardContent className='p-0'>
+     <div className='overflow-x-auto'>  // Enable horizontal scroll for wide tables
+   ```
+
+**Layout Sections:**
+
+| Section    | Card Required | Purpose                    |
+| ---------- | ------------- | -------------------------- |
+| Header     | ❌ No         | Page title and description |
+| Filters    | ✅ Yes        | Search and filter controls |
+| Data Table | ✅ Yes        | Main data display          |
+| Pagination | ✅ Yes        | Navigation controls        |
+| Dialogs    | N/A           | Outside page container     |
+
+**Complete Example:**
+
+```typescript
+'use client';
+
+import PageContainer from '@/components/layout/page-container';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+export default function OrderListView() {
+  return (
+    <PageContainer scrollable>
+      <div className='w-full space-y-6'>
+        {/* Header */}
+        <div>
+          <h1 className='text-foreground text-3xl font-semibold tracking-tight'>
+            Orders
+          </h1>
+          <p className='text-muted-foreground mt-1 text-sm'>
+            Manage customer orders, payments, and fulfillment
+          </p>
+        </div>
+
+        {/* Filters Card */}
+        <Card className='border-border bg-card'>
+          <CardHeader>
+            <CardTitle className='text-base font-medium'>Filters</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {/* Filter controls */}
+          </CardContent>
+        </Card>
+
+        {/* Table Card */}
+        <Card className='border-border bg-card'>
+          <CardContent className='p-0'>
+            <div className='overflow-x-auto'>
+              <Table>
+                {/* Table content */}
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Pagination Card */}
+        <Card className='border-border bg-card'>
+          <CardContent className='flex items-center justify-between p-4'>
+            {/* Pagination controls */}
+          </CardContent>
+        </Card>
+      </div>
+    </PageContainer>
+  );
+}
+```
+
+**Do NOT:**
+
+- ❌ Use `min-h-screen` on inner divs (breaks scrolling)
+- ❌ Wrap the entire page content in a single Card
+- ❌ Forget `w-full` on the content container
+- ❌ Use inconsistent spacing (always use `space-y-6`)
+- ❌ Mix different Card styling patterns across pages
+
+**Benefits:**
+
+- **Full Width Utilization:** `w-full` ensures content uses available space
+- **Visual Hierarchy:** Cards create clear section boundaries
+- **Scrollable:** `PageContainer` with `scrollable` prop handles overflow
+- **Consistent Spacing:** `space-y-6` maintains uniform gaps between sections
+- **Responsive:** Layout adapts to different screen sizes automatically
+
+---
+
+## Pagination Navigation
+
+### Standard Pagination Pattern
+
+**Rule:** All list pages with pagination MUST follow the standard pagination navigation pattern with info display and controls.
+
+**Why:**
+
+- Provides consistent user experience across all list pages
+- Displays clear feedback about data state (loading, count, page info)
+- Enables intuitive navigation with proper disabled states
+- Uses visual icons for better UX
+- Shows loading state during data fetching
+
+**Implementation:**
+
+1. **Pagination Card Structure:**
+
+   ```tsx
+   {
+     /* Pagination */
+   }
+   <Card className='border-border bg-card'>
+     <CardContent className='flex items-center justify-between p-4'>
+       {/* Left: Data info */}
+       <div className='text-muted-foreground text-sm'>
+         {isLoading ? (
+           'Loading...'
+         ) : (
+           <>
+             Showing {items.length} of {total} items
+           </>
+         )}
+       </div>
+
+       {/* Right: Navigation controls */}
+       <div className='flex items-center gap-2'>
+         <Button
+           variant='outline'
+           size='sm'
+           onClick={() => setPage(Math.max(1, page - 1))}
+           disabled={page <= 1}
+         >
+           <ChevronLeft className='h-4 w-4' />
+           Previous
+         </Button>
+         <div className='text-sm font-medium'>
+           Page {page} of {totalPages}
+         </div>
+         <Button
+           variant='outline'
+           size='sm'
+           onClick={() => setPage(Math.min(totalPages, page + 1))}
+           disabled={page >= totalPages}
+         >
+           Next
+           <ChevronRight className='h-4 w-4' />
+         </Button>
+       </div>
+     </CardContent>
+   </Card>;
+   ```
+
+2. **Required Elements:**
+
+   | Element         | Purpose                            | Position       |
+   | --------------- | ---------------------------------- | -------------- |
+   | Data Count      | Show "Showing X of Y items"        | Left           |
+   | Loading State   | Display "Loading..." when fetching | Left           |
+   | Previous Button | Navigate to previous page          | Right          |
+   | Page Info       | Display "Page X of Y"              | Right (center) |
+   | Next Button     | Navigate to next page              | Right          |
+
+3. **Button States:**
+
+   ```tsx
+   // Previous button - disabled when on first page
+   <Button
+     disabled={page <= 1}
+     onClick={() => setPage(Math.max(1, page - 1))}
+   >
+
+   // Next button - disabled when on last page
+   <Button
+     disabled={page >= totalPages}
+     onClick={() => setPage(Math.min(totalPages, page + 1))}
+   >
+   ```
+
+4. **Icons:**
+
+   ```tsx
+   import { ChevronLeft, ChevronRight } from 'lucide-react';
+
+   // Previous button icon (before text)
+   <ChevronLeft className='h-4 w-4' />
+   Previous
+
+   // Next button icon (after text)
+   Next
+   <ChevronRight className='h-4 w-4' />
+   ```
+
+**Complete Example:**
+
+```tsx
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+
+export default function ListView() {
+  const {
+    items,
+    total,
+    totalPages,
+    currentPage: page,
+    setPage,
+    isLoading
+  } = useList();
+
+  return (
+    <PageContainer scrollable>
+      <div className='w-full space-y-6'>
+        {/* Other sections */}
+
+        {/* Pagination */}
+        <Card className='border-border bg-card'>
+          <CardContent className='flex items-center justify-between p-4'>
+            <div className='text-muted-foreground text-sm'>
+              {isLoading ? (
+                'Loading...'
+              ) : (
+                <>
+                  Showing {items.length} of {total} orders
+                </>
+              )}
+            </div>
+            <div className='flex items-center gap-2'>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => setPage(Math.max(1, page - 1))}
+                disabled={page <= 1}
+              >
+                <ChevronLeft className='h-4 w-4' />
+                Previous
+              </Button>
+              <div className='text-sm font-medium'>
+                Page {page} of {totalPages}
+              </div>
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={() => setPage(Math.min(totalPages, page + 1))}
+                disabled={page >= totalPages}
+              >
+                Next
+                <ChevronRight className='h-4 w-4' />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </PageContainer>
+  );
+}
+```
+
+**Styling Guidelines:**
+
+```tsx
+// Card wrapper
+<Card className='border-border bg-card'>
+
+// Content layout
+<CardContent className='flex items-center justify-between p-4'>
+
+// Left side info
+<div className='text-muted-foreground text-sm'>
+
+// Right side controls
+<div className='flex items-center gap-2'>
+
+// Page info text
+<div className='text-sm font-medium'>
+
+// Buttons
+<Button variant='outline' size='sm'>
+```
+
+**Do NOT:**
+
+- ❌ Place pagination controls without a Card wrapper
+- ❌ Skip loading state feedback
+- ❌ Forget to disable buttons at boundaries (first/last page)
+- ❌ Use different button styles or sizes
+- ❌ Omit icons from Previous/Next buttons
+- ❌ Show incorrect item counts or page numbers
+- ❌ Use different layout (always left info, right controls)
+
+**Benefits:**
+
+- **Consistent UX:** Same pagination pattern across all list pages
+- **Clear Feedback:** Users always know data state and position
+- **Accessibility:** Disabled states prevent invalid navigation
+- **Visual Clarity:** Icons improve button recognition
+- **Loading State:** Users understand when data is being fetched
+
+---
+
+## Mobile Responsive Tables
+
+### Horizontal Scroll Pattern for Data Tables
+
+**Rule:** All data tables with multiple columns MUST use the horizontal scroll pattern with `ScrollArea` component for mobile responsiveness. DO NOT use responsive column hiding with `hidden md:inline` classes.
+
+**Why:**
+
+- Ensures all data is accessible on mobile devices
+- Users can scroll horizontally to see all columns
+- Prevents confusion from hidden columns
+- Maintains consistent user experience across devices
+- Simpler to implement and maintain than conditional column visibility
+
+**Implementation:**
+
+1. **PageContainer and Outer Container Setup:**
+
+   ```tsx
+   import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+   import PageContainer from '@/components/layout/page-container';
+
+   export default function ListView() {
+     return (
+       <PageContainer scrollable={true}>
+         {' '}
+         {/* Disable PageContainer scroll */}
+         <div className='w-full space-y-6 overflow-auto'>
+           {' '}
+           {/* Enable overflow on container */}
+           {/* Page content */}
+         </div>
+       </PageContainer>
+     );
+   }
+   ```
+
+2. **Table Container Structure:**
+
+   ```tsx
+   {
+     /* Orders Table */
+   }
+   <div className='border-border bg-card overflow-hidden rounded-lg border'>
+     <ScrollArea className='h-full w-full'>
+       <Table>
+         <TableHeader className='bg-muted/80'>
+           {/* Table headers */}
+         </TableHeader>
+         <TableBody>{/* Table rows */}</TableBody>
+       </Table>
+       <ScrollBar orientation='horizontal' />
+     </ScrollArea>
+   </div>;
+   ```
+
+3. **Column Cell Styling:**
+
+   All cells must use `whitespace-nowrap` to prevent text wrapping:
+
+   ```tsx
+   const columns = useMemo<ColumnDef<Order>[]>(
+     () => [
+       {
+         accessorKey: 'orderNumber',
+         header: 'Order Number',
+         cell: ({ getValue }) => (
+           <span className='whitespace-nowrap font-mono text-sm font-medium'>
+             {getValue() as string}
+           </span>
+         )
+       },
+       {
+         accessorKey: 'customer',
+         header: 'Customer',
+         cell: ({ row }) => (
+           <div className='flex flex-col whitespace-nowrap'>
+             <span className='font-medium'>{row.original.name}</span>
+             <span className='text-muted-foreground text-xs'>
+               {row.original.email}
+             </span>
+           </div>
+         )
+       },
+       {
+         accessorKey: 'total',
+         header: 'Total',
+         cell: ({ getValue }) => (
+           <div className='whitespace-nowrap text-right font-semibold tabular-nums'>
+             {formatCurrency(getValue() as number)}
+           </div>
+         )
+       }
+     ],
+     []
+   );
+   ```
+
+4. **TableHeader and TableHead Styling:**
+
+   ```tsx
+   <TableHeader className='bg-muted/80'>
+     {table.getHeaderGroups().map((headerGroup) => (
+       <TableRow key={headerGroup.id} className='hover:bg-transparent'>
+         {headerGroup.headers.map((header) => (
+           <TableHead
+             key={header.id}
+             className='bg-muted/80 whitespace-nowrap font-semibold'
+           >
+             {flexRender(header.column.columnDef.header, header.getContext())}
+           </TableHead>
+         ))}
+       </TableRow>
+     ))}
+   </TableHeader>
+   ```
+
+**Complete Example:**
+
+```tsx
+'use client';
+
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import PageContainer from '@/components/layout/page-container';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table';
+
+export default function OrderListView() {
+  return (
+    <PageContainer scrollable={true}>
+      <div className='w-full space-y-6 overflow-auto'>
+        {/* Header */}
+        <div>
+          <h1>Orders</h1>
+        </div>
+
+        {/* Filters Card */}
+        <Card>{/* Filter controls */}</Card>
+
+        {/* Orders Table */}
+        <div className='border-border bg-card overflow-hidden rounded-lg border'>
+          <ScrollArea className='h-full w-full'>
+            <Table>
+              <TableHeader className='bg-muted/80'>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow
+                    key={headerGroup.id}
+                    className='hover:bg-transparent'
+                  >
+                    {headerGroup.headers.map((header) => (
+                      <TableHead
+                        key={header.id}
+                        className='bg-muted/80 whitespace-nowrap font-semibold'
+                      >
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows.map((row) => (
+                  <TableRow key={row.id} className='hover:bg-accent/50 group'>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <ScrollBar orientation='horizontal' />
+          </ScrollArea>
+        </div>
+
+        {/* Pagination */}
+        <Card>{/* Pagination controls */}</Card>
+      </div>
+    </PageContainer>
+  );
+}
+```
+
+**Key Styling Classes:**
+
+| Element         | Required Classes                                          | Purpose                     |
+| --------------- | --------------------------------------------------------- | --------------------------- |
+| PageContainer   | `scrollable={true}`                                       | Enable PageContainer scroll |
+| Outer Container | `w-full space-y-6 overflow-auto`                          | Enable container overflow   |
+| Table Wrapper   | `border-border bg-card overflow-hidden rounded-lg border` | Card-like appearance        |
+| ScrollArea      | `h-full w-full`                                           | Fill available space        |
+| TableHeader     | `bg-muted/80`                                             | Header background color     |
+| TableHead       | `bg-muted/80 font-semibold whitespace-nowrap`             | Header cell styling         |
+| Cell Content    | `whitespace-nowrap`                                       | Prevent text wrapping       |
+| ScrollBar       | `orientation='horizontal'`                                | Horizontal scroll indicator |
+
+**Do NOT:**
+
+- ❌ Use `hidden md:inline` or similar responsive hiding classes
+- ❌ Use `<Card>` + `<CardContent className='p-0'>` for table wrapper
+- ❌ Set `scrollable={false}` on PageContainer
+- ❌ Forget `whitespace-nowrap` on cell content
+- ❌ Skip `<ScrollBar orientation='horizontal' />`
+- ❌ Use `overflow-x-auto` on inner divs (use `overflow-auto` on outer container)
+- ❌ Omit background color on TableHeader and TableHead
+
+**Benefits:**
+
+- **Mobile Friendly:** All columns accessible via horizontal scroll
+- **Consistent:** Same table structure on all screen sizes
+- **Maintainable:** No complex responsive logic
+- **User Experience:** Smooth scrolling with visible scroll indicator
+- **No Hidden Data:** Users can see all information
+
+---
+
 ## Future Principles
 
 Additional development principles will be added here as the project evolves.
 
 ---
 
-**Last Updated:** 2025-12-24
+**Last Updated:** 2025-12-27
