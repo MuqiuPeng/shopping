@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "pnpm db:sync && prisma generate && next dev -p 3005",
-    "build": "pnpm db:sync && prisma generate && next build",
+    "dev": "prisma generate && next dev -p 3005",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint .",
     "webhook:start": "ngrok http 3005",
