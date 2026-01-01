@@ -708,3 +708,60 @@ export async function getSixMonthsRevenueData() {
 
   return chartData;
 }
+
+/**
+ * 获取订单状态分布
+ */
+export async function getOrderStatusDistribution() {
+  // 获取各状态的订单数量
+  const [pendingCount, shippedCount, deliveredCount, cancelledCount] =
+    await Promise.all([
+      db.orders.count({ where: { status: OrderStatus.PENDING } }),
+      db.orders.count({ where: { status: OrderStatus.SHIPPED } }),
+      db.orders.count({ where: { status: OrderStatus.DELIVERED } }),
+      db.orders.count({ where: { status: OrderStatus.CANCELLED } })
+    ]);
+
+  const total = pendingCount + shippedCount + deliveredCount + cancelledCount;
+
+  // 构建 pie chart 数据格式
+  const statusData = [
+    {
+      status: 'pending',
+      label: 'Pending',
+      value: pendingCount,
+      percentage:
+        total > 0 ? Number(((pendingCount / total) * 100).toFixed(1)) : 0,
+      fill: 'var(--primary-lighter)'
+    },
+    {
+      status: 'shipped',
+      label: 'Shipped',
+      value: shippedCount,
+      percentage:
+        total > 0 ? Number(((shippedCount / total) * 100).toFixed(1)) : 0,
+      fill: 'var(--primary-light)'
+    },
+    {
+      status: 'delivered',
+      label: 'Delivered',
+      value: deliveredCount,
+      percentage:
+        total > 0 ? Number(((deliveredCount / total) * 100).toFixed(1)) : 0,
+      fill: 'var(--primary)'
+    },
+    {
+      status: 'cancelled',
+      label: 'Cancelled',
+      value: cancelledCount,
+      percentage:
+        total > 0 ? Number(((cancelledCount / total) * 100).toFixed(1)) : 0,
+      fill: 'var(--primary-darker)'
+    }
+  ];
+
+  return {
+    data: statusData,
+    total
+  };
+}

@@ -50,8 +50,16 @@ export function AreaGraph() {
           Showing total visitors for the last 6 months
         </CardDescription>
       </CardHeader>
-      <CardContent className='px-2 pt-4 sm:px-6 sm:pt-6'>
-        <ChartContainer
+      {/* <CardHeader>
+        <CardTitle>Area Chart - Stacked</CardTitle>
+        <CardDescription>
+          Showing total visitors for the last 6 months
+        </CardDescription>
+      </CardHeader> */}
+      <CardContent className='flex min-h-[308px] items-center justify-center px-2 pt-4 sm:px-6 sm:pt-6'>
+        <h3 className='text-3xl font-bold'>Coming Soon..</h3>
+
+        {/* <ChartContainer
           config={chartConfig}
           className='aspect-auto h-[250px] w-full'
         >
@@ -116,9 +124,17 @@ export function AreaGraph() {
               stackId='a'
             />
           </AreaChart>
-        </ChartContainer>
+        </ChartContainer> */}
       </CardContent>
       <CardFooter>
+        <div className='flex w-full items-start gap-2 text-sm'>
+          <div className='grid gap-2'>
+            <div className='flex items-center gap-2 leading-none font-medium'></div>
+            <div className='text-muted-foreground flex items-center gap-2 leading-none'></div>
+          </div>
+        </div>
+      </CardFooter>
+      {/* <CardFooter>
         <div className='flex w-full items-start gap-2 text-sm'>
           <div className='grid gap-2'>
             <div className='flex items-center gap-2 leading-none font-medium'>
@@ -130,7 +146,7 @@ export function AreaGraph() {
             </div>
           </div>
         </div>
-      </CardFooter>
+      </CardFooter> */}
     </Card>
   );
 }

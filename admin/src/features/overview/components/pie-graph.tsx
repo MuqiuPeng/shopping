@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { IconTrendingUp } from '@tabler/icons-react';
-import { Label, Pie, PieChart } from 'recharts';
+import { Label, Pie, PieChart, Cell } from 'recharts';
 
 import {
   Card,
@@ -18,55 +18,61 @@ import {
   ChartTooltip,
   ChartTooltipContent
 } from '@/components/ui/chart';
-
-const chartData = [
-  { browser: 'chrome', visitors: 275, fill: 'var(--primary)' },
-  { browser: 'safari', visitors: 200, fill: 'var(--primary-light)' },
-  { browser: 'firefox', visitors: 287, fill: 'var(--primary-lighter)' },
-  { browser: 'edge', visitors: 173, fill: 'var(--primary-dark)' },
-  { browser: 'other', visitors: 190, fill: 'var(--primary-darker)' }
-];
+import useOverView from '../hook/use-overview';
 
 const chartConfig = {
-  visitors: {
-    label: 'Visitors'
+  value: {
+    label: 'Orders'
   },
-  chrome: {
-    label: 'Chrome',
+  pending: {
+    label: 'Pending',
     color: 'var(--primary)'
   },
-  safari: {
-    label: 'Safari',
-    color: 'var(--primary)'
+  shipped: {
+    label: 'Shipped',
+    color: 'var(--primary-light)'
   },
-  firefox: {
-    label: 'Firefox',
-    color: 'var(--primary)'
+  delivered: {
+    label: 'Delivered',
+    color: 'var(--primary-medium)'
   },
-  edge: {
-    label: 'Edge',
-    color: 'var(--primary)'
-  },
-  other: {
-    label: 'Other',
-    color: 'var(--primary)'
+  cancelled: {
+    label: 'Cancelled',
+    color: 'var(--chart-4)'
   }
 } satisfies ChartConfig;
 
 export function PieGraph() {
-  const totalVisitors = React.useMemo(() => {
-    return chartData.reduce((acc, curr) => acc + curr.visitors, 0);
+  const { orderStatusData, orderStatusTotal, isLoading } = useOverView();
+  const [isClient, setIsClient] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsClient(true);
   }, []);
+
+  // 获取主要状态（订单数最多的）
+  const dominantStatus = React.useMemo(() => {
+    if (!orderStatusData || orderStatusData.length === 0) {
+      return null;
+    }
+    return orderStatusData.reduce((prev, current) =>
+      prev.value > current.value ? prev : current
+    );
+  }, [orderStatusData]);
+
+  if (!isClient || isLoading) {
+    return null;
+  }
 
   return (
     <Card className='@container/card'>
       <CardHeader>
-        <CardTitle>Pie Chart - Donut with Text</CardTitle>
+        <CardTitle>Order Status Distribution</CardTitle>
         <CardDescription>
           <span className='hidden @[540px]/card:block'>
-            Total visitors by browser for the last 6 months
+            Order breakdown by status
           </span>
-          <span className='@[540px]/card:hidden'>Browser distribution</span>
+          <span className='@[540px]/card:hidden'>Order status</span>
         </CardDescription>
       </CardHeader>
       <CardContent className='px-2 pt-4 sm:px-6 sm:pt-6'>
@@ -76,45 +82,95 @@ export function PieGraph() {
         >
           <PieChart>
             <defs>
-              {['chrome', 'safari', 'firefox', 'edge', 'other'].map(
-                (browser, index) => (
-                  <linearGradient
-                    key={browser}
-                    id={`fill${browser}`}
-                    x1='0'
-                    y1='0'
-                    x2='0'
-                    y2='1'
-                  >
-                    <stop
-                      offset='0%'
-                      stopColor='var(--primary)'
-                      stopOpacity={1 - index * 0.15}
-                    />
-                    <stop
-                      offset='100%'
-                      stopColor='var(--primary)'
-                      stopOpacity={0.8 - index * 0.15}
-                    />
-                  </linearGradient>
-                )
-              )}
+              <linearGradient id='fillpending' x1='0' y1='0' x2='0' y2='1'>
+                <stop
+                  offset='5%'
+                  stopColor='var(--primary-lighter)'
+                  stopOpacity={0.9}
+                />
+                <stop
+                  offset='95%'
+                  stopColor='var(--primary-lighter)'
+                  stopOpacity={0.6}
+                />
+              </linearGradient>
+              <linearGradient id='fillshipped' x1='0' y1='0' x2='0' y2='1'>
+                <stop
+                  offset='5%'
+                  stopColor='var(--primary-light)'
+                  stopOpacity={0.9}
+                />
+                <stop
+                  offset='95%'
+                  stopColor='var(--primary-light)'
+                  stopOpacity={0.6}
+                />
+              </linearGradient>
+              <linearGradient id='filldelivered' x1='0' y1='0' x2='0' y2='1'>
+                <stop
+                  offset='5%'
+                  stopColor='var(--primary)'
+                  stopOpacity={0.9}
+                />
+                <stop
+                  offset='95%'
+                  stopColor='var(--primary)'
+                  stopOpacity={0.6}
+                />
+              </linearGradient>
+              <linearGradient id='fillcancelled' x1='0' y1='0' x2='0' y2='1'>
+                <stop
+                  offset='5%'
+                  stopColor='var(--primary-darker)'
+                  stopOpacity={0.9}
+                />
+                <stop
+                  offset='95%'
+                  stopColor='var(--primary-darker)'
+                  stopOpacity={0.6}
+                />
+              </linearGradient>
             </defs>
             <ChartTooltip
               cursor={false}
-              content={<ChartTooltipContent hideLabel />}
+              content={({ active, payload }) => {
+                if (!active || !payload || payload.length === 0) {
+                  return null;
+                }
+                const data = payload[0];
+                const statusLabel = data.name || data.payload.label;
+                const orderCount = data.value;
+                const percentage = data.payload.percentage || 0;
+
+                return (
+                  <div className='bg-background rounded-lg border p-2 shadow-sm'>
+                    <div className='flex flex-col gap-1.5'>
+                      <div className='text-sm font-semibold'>{statusLabel}</div>
+                      <div className='flex items-center gap-2 text-sm'>
+                        <span className='font-medium'>{orderCount} orders</span>
+                        <span className='text-muted-foreground'>
+                          ({percentage.toFixed(1)}%)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }}
             />
             <Pie
-              data={chartData.map((item) => ({
-                ...item,
-                fill: `url(#fill${item.browser})`
-              }))}
-              dataKey='visitors'
-              nameKey='browser'
+              data={orderStatusData}
+              dataKey='value'
+              nameKey='label'
               innerRadius={60}
               strokeWidth={2}
               stroke='var(--background)'
             >
+              {orderStatusData?.map((entry, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={`url(#fill${entry.status})`}
+                />
+              ))}
               <Label
                 content={({ viewBox }) => {
                   if (viewBox && 'cx' in viewBox && 'cy' in viewBox) {
@@ -130,14 +186,14 @@ export function PieGraph() {
                           y={viewBox.cy}
                           className='fill-foreground text-3xl font-bold'
                         >
-                          {totalVisitors.toLocaleString()}
+                          {orderStatusTotal.toLocaleString()}
                         </tspan>
                         <tspan
                           x={viewBox.cx}
                           y={(viewBox.cy || 0) + 24}
                           className='fill-muted-foreground text-sm'
                         >
-                          Total Visitors
+                          Total Orders
                         </tspan>
                       </text>
                     );
@@ -149,13 +205,14 @@ export function PieGraph() {
         </ChartContainer>
       </CardContent>
       <CardFooter className='flex-col gap-2 text-sm'>
-        <div className='flex items-center gap-2 leading-none font-medium'>
-          Chrome leads with{' '}
-          {((chartData[0].visitors / totalVisitors) * 100).toFixed(1)}%{' '}
-          <IconTrendingUp className='h-4 w-4' />
-        </div>
+        {dominantStatus && (
+          <div className='flex items-center gap-2 leading-none font-medium'>
+            {dominantStatus.label} leads with {dominantStatus.percentage}%
+            <IconTrendingUp className='h-4 w-4' />
+          </div>
+        )}
         <div className='text-muted-foreground leading-none'>
-          Based on data from January - June 2024
+          Current order status overview
         </div>
       </CardFooter>
     </Card>

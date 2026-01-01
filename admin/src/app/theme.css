@@ -30,10 +30,20 @@ body {
 .theme-default-scaled {
   --primary: var(--color-neutral-600);
   --primary-foreground: var(--color-neutral-50);
+  --primary-lighter: oklch(0.85 0 0);
+  --primary-light: oklch(0.65 0 0);
+  --primary-medium: oklch(0.45 0 0);
+  --primary-dark: oklch(0.35 0 0);
+  --primary-darker: oklch(0.25 0 0);
 
   @variant dark {
     --primary: var(--color-neutral-500);
     --primary-foreground: var(--color-neutral-50);
+    --primary-lighter: oklch(0.75 0 0);
+    --primary-light: oklch(0.65 0 0);
+    --primary-medium: oklch(0.55 0 0);
+    --primary-dark: oklch(0.45 0 0);
+    --primary-darker: oklch(0.35 0 0);
   }
 }
 
@@ -41,10 +51,20 @@ body {
 .theme-blue-scaled {
   --primary: var(--color-blue-600);
   --primary-foreground: var(--color-blue-50);
+  --primary-lighter: oklch(0.85 0.08 240);
+  --primary-light: oklch(0.7 0.12 240);
+  --primary-medium: oklch(0.55 0.15 240);
+  --primary-dark: oklch(0.4 0.18 240);
+  --primary-darker: oklch(0.3 0.18 240);
 
   @variant dark {
     --primary: var(--color-blue-500);
     --primary-foreground: var(--color-blue-50);
+    --primary-lighter: oklch(0.75 0.15 240);
+    --primary-light: oklch(0.65 0.18 240);
+    --primary-medium: oklch(0.55 0.2 240);
+    --primary-dark: oklch(0.45 0.18 240);
+    --primary-darker: oklch(0.35 0.15 240);
   }
 }
 
@@ -52,10 +72,20 @@ body {
 .theme-green-scaled {
   --primary: var(--color-lime-600);
   --primary-foreground: var(--color-lime-50);
+  --primary-lighter: oklch(0.85 0.1 130);
+  --primary-light: oklch(0.7 0.13 130);
+  --primary-medium: oklch(0.55 0.15 130);
+  --primary-dark: oklch(0.4 0.15 130);
+  --primary-darker: oklch(0.3 0.12 130);
 
   @variant dark {
     --primary: var(--color-lime-600);
     --primary-foreground: var(--color-lime-50);
+    --primary-lighter: oklch(0.75 0.15 130);
+    --primary-light: oklch(0.65 0.16 130);
+    --primary-medium: oklch(0.55 0.17 130);
+    --primary-dark: oklch(0.45 0.15 130);
+    --primary-darker: oklch(0.35 0.13 130);
   }
 }
 
@@ -63,10 +93,20 @@ body {
 .theme-amber-scaled {
   --primary: var(--color-amber-600);
   --primary-foreground: var(--color-amber-50);
+  --primary-lighter: oklch(0.85 0.1 85);
+  --primary-light: oklch(0.7 0.13 85);
+  --primary-medium: oklch(0.55 0.15 85);
+  --primary-dark: oklch(0.4 0.15 85);
+  --primary-darker: oklch(0.3 0.12 85);
 
   @variant dark {
     --primary: var(--color-amber-500);
     --primary-foreground: var(--color-amber-50);
+    --primary-lighter: oklch(0.75 0.13 85);
+    --primary-light: oklch(0.65 0.15 85);
+    --primary-medium: oklch(0.55 0.16 85);
+    --primary-dark: oklch(0.45 0.14 85);
+    --primary-darker: oklch(0.35 0.12 85);
   }
 }
 
@@ -75,10 +115,20 @@ body {
   --font-sans: var(--font-mono);
   --primary: var(--color-neutral-600);
   --primary-foreground: var(--color-neutral-50);
+  --primary-lighter: oklch(0.85 0 0);
+  --primary-light: oklch(0.65 0 0);
+  --primary-medium: oklch(0.45 0 0);
+  --primary-dark: oklch(0.35 0 0);
+  --primary-darker: oklch(0.25 0 0);
 
   @variant dark {
     --primary: var(--color-neutral-500);
     --primary-foreground: var(--color-neutral-50);
+    --primary-lighter: oklch(0.75 0 0);
+    --primary-light: oklch(0.65 0 0);
+    --primary-medium: oklch(0.55 0 0);
+    --primary-dark: oklch(0.45 0 0);
+    --primary-darker: oklch(0.35 0 0);
   }
 
   .rounded-xs,

@@ -4,6 +4,7 @@ import useSWR from 'swr';
 import { getMonthlyRevenue } from '@/repositories/order/order.repo';
 import { getMonthlyNewCustomers } from '@/repositories/customer/customer.repository';
 import { getSixMonthsRevenueData } from '@/repositories/order/order.repo';
+import { getOrderStatusDistribution } from '@/repositories/order/order.repo';
 
 const useOverView = () => {
   const { data: revenueData, isLoading: revenueLoading } = useSWR(
@@ -34,7 +35,18 @@ const useOverView = () => {
     }
   );
 
-  const isLoading = revenueLoading || customersLoading;
+  // 获取订单状态分布数据
+  const { data: statusData, isLoading: statusLoading } = useSWR(
+    'order-status-distribution',
+    getOrderStatusDistribution,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false
+    }
+  );
+
+  const isLoading =
+    revenueLoading || customersLoading || sixMonthsLoading || statusLoading;
 
   return {
     // 收入相关
@@ -49,6 +61,10 @@ const useOverView = () => {
 
     // 六个月收入数据
     sixMonthsRevenueData: sixMonthsData || [],
+
+    // 订单状态分布
+    orderStatusData: statusData?.data || [],
+    orderStatusTotal: statusData?.total || 0,
 
     // 加载状态
     isLoading

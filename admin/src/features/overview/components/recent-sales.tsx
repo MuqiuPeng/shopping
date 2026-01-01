@@ -56,7 +56,7 @@ export function RecentSales() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className='space-y-8'>
+        <div className='space-y-4'>
           {sales.map((sale) => {
             // customer 从数据中直接获取
             const customer = sale.customer;
