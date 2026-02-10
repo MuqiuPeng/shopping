@@ -20,3 +20,15 @@ export {
   removeUserAddressAction,
   saveUserAddressAction,
 } from "./address.action";
+
+export {
+  fetchUserFavoritesAction,
+  fetchUserFavoritesCountAction,
+  addFavoriteAction,
+  removeFavoriteAction,
+  removeFavoriteByProductIdAction,
+  toggleFavoriteAction,
+  checkIsFavoriteAction,
+  updateFavoriteNotesAction,
+  clearAllFavoritesAction,
+} from "./favorite.action";
