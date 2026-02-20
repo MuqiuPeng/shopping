@@ -87,6 +87,7 @@ model customers {
   updatedAt      DateTime         @updatedAt
   addresses      addresses[]
   carts          carts?
+  favorites      favorites[]
   orders         orders[]
   reviews        reviews[]
   wishlist_items wishlist_items[]
@@ -193,6 +194,7 @@ model products {
   thumbnail          String?
   viewCount          Int                  @default(0)
   wishlistCount      Int                  @default(0)
+  favorites          favorites[]
   categories         product_categories[]
   product_faqs       product_faqs[]
   product_images     product_images[]
@@ -442,6 +444,27 @@ model related_products {
   @@unique([productId, relatedProductId])
   @@index([productId])
   @@index([type])
+}
+
+model favorites {
+  id           String    @id
+  customerId   String
+  productId    String?
+  productName  String?
+  productSlug  String?
+  productImage String?
+  variantId    String?
+  variantName  String?
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime
+  customers    customers @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  products     products? @relation(fields: [productId], references: [id])
+
+  @@unique([customerId, productId], map: "favorites_customer_product_unique")
+  @@index([createdAt])
+  @@index([customerId])
+  @@index([productId])
 }
 
 enum OrderStatus {
