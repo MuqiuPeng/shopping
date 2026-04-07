@@ -10,6 +10,8 @@ import {
   Truck,
   RefreshCw,
   Gift,
+  Share2,
+  Heart,
 } from "lucide-react";
 import Header from "../component/header";
 import Gallery from "../component/gallery";
@@ -160,11 +162,7 @@ export const ProductDetailView = ({
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <Header
-        productName={toStringOrEmpty(data?.name)}
-        isFavorite={isFavorite}
-        onToggleFavorite={() => setIsFavorite(!isFavorite)}
-      />
+      <Header />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -201,9 +199,26 @@ export const ProductDetailView = ({
                   </span>
                 </div>
               </div>
-              <h1 className="text-3xl font-light tracking-tight text-foreground mb-4">
-                {toStringOrEmpty(data?.name)}
-              </h1>
+              <div className="flex items-start justify-between mb-4">
+                <h1 className="text-3xl font-light tracking-tight text-foreground">
+                  {toStringOrEmpty(data?.name)}
+                </h1>
+                <div className="flex items-center space-x-2 ml-4">
+                  <button className="p-2 hover:bg-secondary rounded-lg transition-colors">
+                    <Share2 className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => setIsFavorite(!isFavorite)}
+                    className="p-2 hover:bg-secondary rounded-lg transition-colors"
+                  >
+                    <Heart
+                      className={`w-5 h-5 ${
+                        isFavorite ? "fill-accent text-accent" : "text-foreground"
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
 
               <div className="flex items-center space-x-3 mb-6">
                 <span className="text-2xl font-medium text-accent">
@@ -221,22 +236,28 @@ export const ProductDetailView = ({
             <div>
               <h3 className="text-sm font-medium text-foreground mb-3">Size</h3>
               <div className="flex space-x-2">
-                {variants.map((variant) => (
-                  <button
-                    onClick={() => {
-                      handleVariantSelect(variant.id);
-                    }}
-                    className={cn(
-                      "px-4 py-2 border rounded-lg text-sm font-medium transition-colors",
-                      selectedVariantId === variant.id
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-input bg-background text-foreground hover:bg-secondary"
-                    )}
-                    key={variant.id}
-                  >
-                    {variant.name}
-                  </button>
-                ))}
+                {variants.map((variant) => {
+                  const isOutOfStock = (variant.inventory ?? 0) <= 0;
+                  return (
+                    <button
+                      onClick={() => {
+                        handleVariantSelect(variant.id);
+                      }}
+                      className={cn(
+                        "px-4 py-2 border rounded-lg text-sm font-medium transition-colors",
+                        isOutOfStock
+                          ? "border-muted bg-muted text-muted-foreground cursor-not-allowed"
+                          : selectedVariantId === variant.id
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-input bg-background text-foreground hover:bg-secondary"
+                      )}
+                      key={variant.id}
+                      disabled={isOutOfStock}
+                    >
+                      {variant.name}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -245,44 +266,54 @@ export const ProductDetailView = ({
               <div>
                 <h3 className="text-sm font-medium text-foreground mb-3">
                   Quantity
+                  <span className="text-sm text-muted-foreground font-normal ml-2">
+                    ({selectedVariant?.inventory ?? 0} in stock)
+                  </span>
                 </h3>
                 <div className="flex items-center space-x-4">
-                  <div className="flex items-center border border-input rounded-lg">
+                  <div className={cn(
+                    "flex items-center border rounded-lg",
+                    (selectedVariant?.inventory ?? 0) <= 0 ? "border-muted bg-muted/50" : "border-input"
+                  )}>
                     <button
                       onClick={() => handleQuantityChange(-1)}
-                      className="p-2 hover:bg-secondary transition-colors"
-                      disabled={quantity <= 1}
+                      className="p-2 hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={(selectedVariant?.inventory ?? 0) <= 0 || quantity <= 1}
                     >
                       <Minus className="w-4 h-4" />
                     </button>
-                    <span className="px-4 py-2 font-medium">{quantity}</span>
+                    <span className="px-4 py-2 font-medium">
+                      {(selectedVariant?.inventory ?? 0) <= 0 ? 0 : quantity}
+                    </span>
                     <button
                       onClick={() => handleQuantityChange(1)}
-                      className="p-2 hover:bg-secondary transition-colors"
-                      // disabled={quantity >= product.stockCount} // 之后再确定是否需要这个部分
+                      className="p-2 hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={(selectedVariant?.inventory ?? 0) <= 0 || quantity >= (selectedVariant?.inventory ?? 0)}
                     >
                       <Plus className="w-4 h-4" />
                     </button>
                   </div>
-                  <span className="text-sm text-muted-foreground">
-                    {/* {product.stockCount} in stock */}
-                  </span>
                 </div>
               </div>
 
               <div className="flex space-x-3">
                 <button
-                  className="flex-1 bg-primary text-primary-foreground py-3 px-6 rounded-lg font-medium hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center space-x-2"
+                  className={cn(
+                    "flex-1 py-3 px-6 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all flex items-center justify-center space-x-2",
+                    (selectedVariant?.inventory ?? 0) > 0
+                      ? "bg-primary text-primary-foreground hover:bg-primary/90 transform hover:scale-[1.02] active:scale-[0.98]"
+                      : "bg-muted text-muted-foreground cursor-not-allowed"
+                  )}
                   onClick={() =>
                     handleAddingToCart({
                       variantId: selectedVariantId,
-
                       quantity,
                     })
                   }
+                  disabled={(selectedVariant?.inventory ?? 0) <= 0}
                 >
                   <ShoppingCart className="w-5 h-5" />
-                  <span>Add to Cart</span>
+                  <span>{(selectedVariant?.inventory ?? 0) > 0 ? "Add to Cart" : "Out of Stock"}</span>
                 </button>
                 {/* <button className="px-6 py-3 border border-input rounded-lg font-medium hover:bg-secondary transition-colors">
                   <Gift className="w-5 h-5" />

@@ -5,6 +5,7 @@ import { Heart, ShoppingCart } from "lucide-react";
 import { products } from "@prisma/client";
 import { ProductWithVariants } from "@/types/prisma";
 import { linkToProductDetail } from "@/utils";
+import { cn } from "@/lib/utils";
 
 interface ProductGridDisplayProps {
   products: ProductWithVariants[];
@@ -18,6 +19,8 @@ const ProductGridDisplay = ({ products }: ProductGridDisplayProps) => {
         const defaultVariant = variants.find((item) => item.isDefault === true);
         const price = defaultVariant?.price || 0;
         const comparePrice = defaultVariant?.compareAtPrice;
+        const totalInventory = variants.reduce((sum, v) => sum + (v.inventory ?? 0), 0);
+        const isOutOfStock = totalInventory <= 0;
 
         return (
           <Link
@@ -29,8 +32,18 @@ const ProductGridDisplay = ({ products }: ProductGridDisplayProps) => {
               <img
                 src={product.thumbnail || "/placeholder.jpg"}
                 alt={product.name}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                className={cn(
+                  "w-full h-full object-cover transition-transform duration-300",
+                  isOutOfStock ? "grayscale" : "group-hover:scale-105"
+                )}
               />
+              {isOutOfStock && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                  <span className="text-white font-medium text-lg px-4 py-2 bg-black/60 rounded-lg">
+                    Out of Stock
+                  </span>
+                </div>
+              )}
               {/* {product.sale && (
               <div className="absolute top-3 left-3 bg-accent text-accent-foreground px-2 py-1 rounded-full text-xs font-medium">
                 Sale
