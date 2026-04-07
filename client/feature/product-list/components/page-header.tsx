@@ -1,17 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Grid, List, SlidersHorizontal } from "lucide-react";
+import { ArrowLeft, Search, ShoppingCart, User, SlidersHorizontal } from "lucide-react";
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 
 interface PageHeaderProps {
-  viewMode: "grid" | "list";
-  onViewModeChange: (mode: "grid" | "list") => void;
   onToggleFilters: () => void;
 }
 
 const PageHeader = ({
-  viewMode,
-  onViewModeChange,
   onToggleFilters,
 }: PageHeaderProps) => {
   return (
@@ -31,19 +28,31 @@ const PageHeader = ({
               Our Collection
             </h1>
           </div>
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() =>
-                onViewModeChange(viewMode === "grid" ? "list" : "grid")
-              }
-              className="p-2 hover:bg-secondary rounded-lg transition-colors"
-            >
-              {viewMode === "grid" ? (
-                <List className="w-5 h-5" />
-              ) : (
-                <Grid className="w-5 h-5" />
-              )}
-            </button>
+          <div className="flex items-center space-x-4">
+            <Search className="w-5 h-5 cursor-pointer hover:text-muted-foreground transition" />
+
+            <SignedIn>
+              <Link href="/dashboard">
+                <User className="w-5 h-5 cursor-pointer hover:text-muted-foreground transition" />
+              </Link>
+              <UserButton
+                appearance={{
+                  elements: {
+                    avatarBox: "w-8 h-8",
+                  },
+                }}
+              />
+            </SignedIn>
+
+            <SignedOut>
+              <Link href="/auth/sign-in">
+                <User className="w-5 h-5 cursor-pointer hover:text-muted-foreground transition" />
+              </Link>
+            </SignedOut>
+
+            <Link href="/cart">
+              <ShoppingCart className="w-5 h-5 cursor-pointer hover:text-muted-foreground transition" />
+            </Link>
 
             <button
               onClick={onToggleFilters}

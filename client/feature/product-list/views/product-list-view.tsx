@@ -91,8 +91,6 @@ export function ProductListView() {
   return (
     <div className="min-h-screen bg-background">
       <PageHeader
-        viewMode={viewMode}
-        onViewModeChange={handleViewModeChange}
         onToggleFilters={handleToggleFilters}
       />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -116,6 +114,8 @@ export function ProductListView() {
               sortBy={sortBy}
               onSortChange={handleSortChange}
               sortOptions={sortOptions}
+              viewMode={viewMode}
+              onViewModeChange={handleViewModeChange}
             />
             <ProductDisplay
               isLoading={isLoading}
