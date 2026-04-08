@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Heart, ShoppingCart } from "lucide-react";
 import { ProductWithVariants } from "@/types/prisma";
 import { linkToProductDetail } from "@/utils";
+import { cn } from "@/lib/utils";
 
 interface ProductListDisplayProps {
   products: ProductWithVariants[];
@@ -17,6 +18,8 @@ const ProductListDisplay = ({ products }: ProductListDisplayProps) => {
         const defaultVariant = variants.find((item) => item.isDefault === true);
         const price = defaultVariant?.price || 0;
         const comparePrice = defaultVariant?.compareAtPrice || 0;
+        const totalInventory = variants.reduce((sum, v) => sum + (v.inventory ?? 0), 0);
+        const isOutOfStock = totalInventory <= 0;
         return (
           <Link
             key={product.id}
@@ -27,8 +30,18 @@ const ProductListDisplay = ({ products }: ProductListDisplayProps) => {
               <img
                 src={product.thumbnail || "placeholder.jpg"}
                 alt={product.name}
-                className="w-full h-full object-cover"
+                className={cn(
+                  "w-full h-full object-cover",
+                  isOutOfStock && "grayscale"
+                )}
               />
+              {isOutOfStock && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                  <span className="text-white font-medium text-xs px-1 py-0.5 bg-black/60 rounded">
+                    Out of Stock
+                  </span>
+                </div>
+              )}
               {/* {product.sale && (
                 <div className="absolute top-1 left-1 bg-accent text-accent-foreground px-1 py-0.5 rounded text-xs font-medium">
                   Sale

@@ -1,15 +1,10 @@
 "use client";
 
-import { Heart, ArrowLeft, Share2 } from "lucide-react";
+import { ArrowLeft, Search, ShoppingCart, User } from "lucide-react";
 import Link from "next/link";
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 
-interface HeaderProps {
-  productName: string;
-  isFavorite: boolean;
-  onToggleFavorite: () => void;
-}
-
-const Header = ({ productName, isFavorite, onToggleFavorite }: HeaderProps) => {
+const Header = () => {
   return (
     <div className="border-b border-border bg-background/95 backdrop-blur-sm sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -21,20 +16,31 @@ const Header = ({ productName, isFavorite, onToggleFavorite }: HeaderProps) => {
             <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
             Back to Products
           </Link>
-          <div className="flex items-center space-x-2">
-            <button className="p-2 hover:bg-secondary rounded-lg transition-colors">
-              <Share2 className="w-5 h-5" />
-            </button>
-            <button
-              onClick={onToggleFavorite}
-              className="p-2 hover:bg-secondary rounded-lg transition-colors"
-            >
-              <Heart
-                className={`w-5 h-5 ${
-                  isFavorite ? "fill-accent text-accent" : "text-foreground"
-                }`}
+          <div className="flex items-center space-x-4">
+            <Search className="w-5 h-5 cursor-pointer hover:text-muted-foreground transition" />
+
+            <SignedIn>
+              <Link href="/dashboard">
+                <User className="w-5 h-5 cursor-pointer hover:text-muted-foreground transition" />
+              </Link>
+              <UserButton
+                appearance={{
+                  elements: {
+                    avatarBox: "w-8 h-8",
+                  },
+                }}
               />
-            </button>
+            </SignedIn>
+
+            <SignedOut>
+              <Link href="/auth/sign-in">
+                <User className="w-5 h-5 cursor-pointer hover:text-muted-foreground transition" />
+              </Link>
+            </SignedOut>
+
+            <Link href="/cart">
+              <ShoppingCart className="w-5 h-5 cursor-pointer hover:text-muted-foreground transition" />
+            </Link>
           </div>
         </div>
       </div>
