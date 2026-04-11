@@ -29,4 +29,5 @@ export interface UpdateCategoryInput {
   imageUrl?: string;
   isActive?: boolean;
   sortOrder?: number;
+  parentId?: string | null;
 }

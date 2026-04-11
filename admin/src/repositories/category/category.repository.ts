@@ -18,19 +18,59 @@ function generateSlug(name: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
+/**
+ * 生成分类的 path
+ * 根分类: path = slug (如 "all-categories")
+ * 子分类: path = parent.path/slug (如 "all-categories/90s")
+ */
 async function generatePath(
   parentId: string | null,
   slug: string
 ): Promise<string> {
-  if (!parentId) return '';
+  // 根分类：path 就是 slug
+  if (!parentId) return slug;
 
+  // 获取父分类的 path
   const parent = await db.categories.findUnique({
     where: { id: parentId },
-    select: { path: true, id: true }
+    select: { path: true }
   });
 
-  if (!parent) return slug;
-  return parent.path ? `${parent.path}>${slug}` : parent.id;
+  if (!parent) {
+    throw new Error('Parent category not found');
+  }
+
+  // 子分类：parent.path/slug
+  return `${parent.path}/${slug}`;
+}
+
+/**
+ * 递归更新所有子分类的 path
+ * 当父分类的 slug 或 path 改变时调用
+ */
+async function updateChildrenPaths(parentId: string, newParentPath: string) {
+  // 获取所有直接子分类
+  const children = await db.categories.findMany({
+    where: { parentId },
+    select: { id: true, slug: true }
+  });
+
+  // 递归更新每个子分类
+  for (const child of children) {
+    const newChildPath = `${newParentPath}/${child.slug}`;
+
+    // 更新子分类的 path
+    await db.categories.update({
+      where: { id: child.id },
+      data: {
+        path: newChildPath,
+        updatedAt: new Date()
+      }
+    });
+
+    // 递归更新子分类的子分类
+    await updateChildrenPaths(child.id, newChildPath);
+  }
 }
 
 async function validateCategoryNotProtected(
@@ -237,6 +277,16 @@ export const updateCategory = async (id: string, data: UpdateCategoryInput) => {
     // 验证分类存在且未被保护
     const category = await validateCategoryNotProtected(id, 'update');
 
+    // 获取当前分类的完整信息
+    const currentCategory = await db.categories.findUnique({
+      where: { id },
+      select: { slug: true, path: true, parentId: true }
+    });
+
+    if (!currentCategory) {
+      throw new Error('Category not found');
+    }
+
     // 验证名称唯一性（如果要更新名称）
     if (data.name) {
       await validateUniqueName(data.name, id);
@@ -247,13 +297,60 @@ export const updateCategory = async (id: string, data: UpdateCategoryInput) => {
       await validateUniqueSlug(data.slug, id);
     }
 
+    // 验证新的父分类是否允许子分类（如果要更新 parentId）
+    if (data.parentId !== undefined) {
+      await validateParentAllowsChildren(data.parentId);
+
+      // 防止将分类移动到自己的子分类下（会造成循环引用）
+      if (data.parentId) {
+        const potentialParent = await db.categories.findUnique({
+          where: { id: data.parentId },
+          select: { path: true }
+        });
+
+        if (
+          potentialParent &&
+          potentialParent.path.includes(currentCategory.path)
+        ) {
+          throw new Error('Cannot move category to its own subcategory');
+        }
+      }
+    }
+
+    // 检查是否需要重新计算 path
+    const slugChanged = data.slug && data.slug !== currentCategory.slug;
+    const parentChanged =
+      data.parentId !== undefined && data.parentId !== currentCategory.parentId;
+    const needsPathUpdate = slugChanged || parentChanged;
+
+    let newPath = currentCategory.path;
+
+    if (needsPathUpdate) {
+      // 使用新 slug（如果有）或当前 slug
+      const effectiveSlug = data.slug || currentCategory.slug;
+
+      // 使用新 parentId（如果有）或当前 parentId
+      const effectiveParentId =
+        data.parentId !== undefined ? data.parentId : currentCategory.parentId;
+
+      // 重新生成 path
+      newPath = await generatePath(effectiveParentId, effectiveSlug);
+    }
+
+    // 更新分类
     const updated = await db.categories.update({
       where: { id },
       data: {
         ...data,
+        ...(needsPathUpdate && { path: newPath }),
         updatedAt: new Date()
       }
     });
+
+    // 如果 path 改变了，需要级联更新所有子分类的 path
+    if (needsPathUpdate && newPath !== currentCategory.path) {
+      await updateChildrenPaths(id, newPath);
+    }
 
     return updated;
   } catch (error) {
