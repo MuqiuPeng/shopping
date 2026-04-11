@@ -148,6 +148,12 @@ export class ProductRepo {
         },
       },
     };
+
+    // Fetch total count
+    const total = await db.products.count({
+      where: whereCondition,
+    });
+
     // Fetch products with pagination
     const products = await db.products.findMany({
       skip: offset,
