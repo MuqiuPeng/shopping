@@ -18,6 +18,7 @@ import {
   ChartTooltip
 } from '@/components/ui/chart';
 import useOverView from '../hook/use-overview';
+import { PieGraphSkeleton } from './pie-graph-skeleton';
 
 const chartConfig = {
   value: {
@@ -60,7 +61,7 @@ export function PieGraph() {
   }, [orderStatusData]);
 
   if (!isClient || isLoading) {
-    return null;
+    return <PieGraphSkeleton />;
   }
 
   return (

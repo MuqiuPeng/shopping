@@ -17,6 +17,7 @@ import {
   ChartTooltipContent
 } from '@/components/ui/chart';
 import useOverView from '../hook/use-overview';
+import { BarGraphSkeleton } from './bar-graph-skeleton';
 
 export const description = 'Monthly revenue bar chart';
 
@@ -37,7 +38,7 @@ export function BarGraph() {
 
   // 条件判断放在所有 hooks 之后
   if (!isClient || isLoading) {
-    return null;
+    return <BarGraphSkeleton />;
   }
 
   return (
