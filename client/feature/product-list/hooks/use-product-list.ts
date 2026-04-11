@@ -5,7 +5,7 @@ import { delay } from "@/utils";
 const PRODUCT_LIST_PAGE_SIZE = 8;
 
 export const useProductListWithCategory = (
-  input: useProductListWithCategoryProps
+  input: useProductListWithCategoryProps,
 ) => {
   const { categoryId, page } = input;
 
@@ -44,7 +44,7 @@ export const useProductListWithCategory = (
       revalidateOnReconnect: false,
       refreshInterval: 0,
       dedupingInterval: 2000,
-    }
+    },
   );
 
   return {

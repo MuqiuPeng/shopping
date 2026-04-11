@@ -33,6 +33,20 @@ const SidebarFilters = ({
       <div className="bg-card border border-border rounded-xl p-6">
         <h3 className="font-medium text-foreground mb-4">Categories</h3>
         <div className="space-y-2">
+          {/* All Categories Button */}
+          <button
+            onClick={() => onCategoryChange("all")}
+            className={`w-full text-left px-3 py-2 rounded-lg transition-colors text-sm ${
+              selectedCategory === "all"
+                ? "bg-primary text-primary-foreground"
+                : "hover:bg-secondary"
+            }`}
+          >
+            <div className="flex justify-between items-center">
+              <span>All Products</span>
+            </div>
+          </button>
+          {/* Other Categories */}
           {categories.map((category) => (
             <button
               key={category.id}

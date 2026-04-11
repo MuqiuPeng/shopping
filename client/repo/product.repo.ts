@@ -16,7 +16,7 @@ export class ProductRepo {
    */
   public static async getMarketingProductsLimit(
     marketId: marketingCategory,
-    limit: number
+    limit: number,
   ) {
     const hotProducts = await db.products.findMany({
       take: limit,
@@ -148,12 +148,6 @@ export class ProductRepo {
         },
       },
     };
-
-    // Fetch total count
-    const total = await db.products.count({
-      where: whereCondition,
-    });
-
     // Fetch products with pagination
     const products = await db.products.findMany({
       skip: offset,

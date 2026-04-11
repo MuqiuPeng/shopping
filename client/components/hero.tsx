@@ -1,3 +1,5 @@
+import ThemedButton from "./theme-button";
+
 export default function Hero() {
   return (
     <section className="relative h-[500px] md:h-[600px] bg-secondary overflow-hidden">
@@ -10,14 +12,15 @@ export default function Hero() {
       />
 
       <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-4">
-        <h2 className="text-5xl md:text-6xl font-light text-balance text-foreground mb-4">Elegance in Every Bead</h2>
+        <h2 className="text-5xl md:text-6xl font-light text-balance text-foreground mb-4">
+          Elegance in Every Bead
+        </h2>
         <p className="text-lg md:text-xl font-light text-muted-foreground mb-8 max-w-2xl">
-          Discover our exquisite collection of pearl and crystal beaded bracelets
+          Discover our exquisite collection of pearl and crystal beaded
+          bracelets
         </p>
-        <button className="px-8 py-3 bg-primary text-primary-foreground font-light rounded-lg hover:opacity-90 transition">
-          Shop Now
-        </button>
+        <ThemedButton>Shop Now</ThemedButton>
       </div>
     </section>
-  )
+  );
 }

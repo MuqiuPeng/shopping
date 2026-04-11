@@ -6,7 +6,8 @@ import useSWR from "swr";
 const useSidebarCategory = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const categoryFromUrl = searchParams.get("category") || "all";
+  const [selectedCategory, setSelectedCategory] = useState(categoryFromUrl);
 
   const handleCategoryChange = useCallback(
     (categoryId: string) => {
@@ -27,7 +28,7 @@ const useSidebarCategory = () => {
       // Update URL
       router.push(`?${params.toString()}`);
     },
-    [searchParams, router]
+    [searchParams, router],
   );
 
   const { data, isLoading, error } = useSWR("all-categories", async () => {

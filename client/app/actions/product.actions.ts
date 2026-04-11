@@ -10,7 +10,7 @@ function serializeProducts<T>(products: T): T {
         return value.toJSON();
       }
       return value;
-    })
+    }),
   );
 }
 
@@ -18,7 +18,7 @@ export async function getHotProductsAction(limit: number) {
   try {
     const products = await ProductRepo.getMarketingProductsLimit(
       "marketing-hot-buy",
-      limit
+      limit,
     );
     return {
       success: true,
@@ -38,7 +38,7 @@ export async function getRecommendProductsAction(limit: number) {
   try {
     const products = await ProductRepo.getMarketingProductsLimit(
       "marketing-recommend",
-      limit
+      limit,
     );
     return {
       success: true,
@@ -88,7 +88,9 @@ export async function getProductsByPathAction(input: {
 }) {
   try {
     const { categoryId, limit, offset } = input;
+
     const categoryPath = await CategoryRepo.getCategoryPathById(categoryId);
+
     if (!categoryPath) {
       return {
         success: false,

@@ -51,12 +51,14 @@ export function ProductListView() {
   } = useSidebarCategory();
 
   // use product hooks
-  const pageList = useProductListWithCategory({
-    categoryId: categoryFromQuery
-      ? categoryFromQuery
-      : selectedCategory !== "all"
+  const finalCategoryId = categoryFromQuery
+    ? categoryFromQuery
+    : selectedCategory !== "all"
       ? selectedCategory
-      : undefined,
+      : undefined;
+
+  const pageList = useProductListWithCategory({
+    categoryId: finalCategoryId,
     page: pageFromQuery,
   });
   const products = pageList.products?.data?.products;
@@ -90,15 +92,12 @@ export function ProductListView() {
 
   return (
     <div className="min-h-screen bg-background">
-      <PageHeader
-        onToggleFilters={handleToggleFilters}
-      />
+      <PageHeader onToggleFilters={handleToggleFilters} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar Filters */}
           <SidebarFilters
             showFilters={showFilters}
-            // categories={categories}
             categories={categoryList || []}
             selectedCategory={selectedCategory}
             onCategoryChange={handleCategoryChange}

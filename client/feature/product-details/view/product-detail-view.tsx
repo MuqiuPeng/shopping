@@ -143,7 +143,7 @@ export const ProductDetailView = ({
           setQuantity(1);
         }
       },
-    }
+    },
   );
 
   // =================================
@@ -187,7 +187,7 @@ export const ProductDetailView = ({
             <div>
               <div className="flex items-center space-x-2 mb-2">
                 <span className="text-sm text-muted-foreground">
-                  {data?.categories[0].category.name}
+                  {data?.categories[0]?.category.name || ""}
                 </span>
                 <div className="flex items-center space-x-1">
                   <Star className="w-4 h-4 fill-accent text-accent" />
@@ -213,7 +213,9 @@ export const ProductDetailView = ({
                   >
                     <Heart
                       className={`w-5 h-5 ${
-                        isFavorite ? "fill-accent text-accent" : "text-foreground"
+                        isFavorite
+                          ? "fill-accent text-accent"
+                          : "text-foreground"
                       }`}
                     />
                   </button>
@@ -224,9 +226,10 @@ export const ProductDetailView = ({
                 <span className="text-2xl font-medium text-accent">
                   ${handleDecimal(selectedVariant?.price)}
                 </span>
-                {(selectedVariant?.compareAtPrice || 0) && (
+
+                {handleDecimal(selectedVariant?.compareAtPrice) !== 0 && (
                   <span className="text-xl text-muted-foreground line-through">
-                    ${handleDecimal(selectedVariant?.price)}
+                    ${handleDecimal(selectedVariant?.compareAtPrice)}
                   </span>
                 )}
               </div>
@@ -248,8 +251,8 @@ export const ProductDetailView = ({
                         isOutOfStock
                           ? "border-muted bg-muted text-muted-foreground cursor-not-allowed"
                           : selectedVariantId === variant.id
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-input bg-background text-foreground hover:bg-secondary"
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-input bg-background text-foreground hover:bg-secondary",
                       )}
                       key={variant.id}
                       disabled={isOutOfStock}
@@ -271,14 +274,20 @@ export const ProductDetailView = ({
                   </span>
                 </h3>
                 <div className="flex items-center space-x-4">
-                  <div className={cn(
-                    "flex items-center border rounded-lg",
-                    (selectedVariant?.inventory ?? 0) <= 0 ? "border-muted bg-muted/50" : "border-input"
-                  )}>
+                  <div
+                    className={cn(
+                      "flex items-center border rounded-lg",
+                      (selectedVariant?.inventory ?? 0) <= 0
+                        ? "border-muted bg-muted/50"
+                        : "border-input",
+                    )}
+                  >
                     <button
                       onClick={() => handleQuantityChange(-1)}
                       className="p-2 hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled={(selectedVariant?.inventory ?? 0) <= 0 || quantity <= 1}
+                      disabled={
+                        (selectedVariant?.inventory ?? 0) <= 0 || quantity <= 1
+                      }
                     >
                       <Minus className="w-4 h-4" />
                     </button>
@@ -288,7 +297,10 @@ export const ProductDetailView = ({
                     <button
                       onClick={() => handleQuantityChange(1)}
                       className="p-2 hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled={(selectedVariant?.inventory ?? 0) <= 0 || quantity >= (selectedVariant?.inventory ?? 0)}
+                      disabled={
+                        (selectedVariant?.inventory ?? 0) <= 0 ||
+                        quantity >= (selectedVariant?.inventory ?? 0)
+                      }
                     >
                       <Plus className="w-4 h-4" />
                     </button>
@@ -302,7 +314,7 @@ export const ProductDetailView = ({
                     "flex-1 py-3 px-6 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all flex items-center justify-center space-x-2",
                     (selectedVariant?.inventory ?? 0) > 0
                       ? "bg-primary text-primary-foreground hover:bg-primary/90 transform hover:scale-[1.02] active:scale-[0.98]"
-                      : "bg-muted text-muted-foreground cursor-not-allowed"
+                      : "bg-muted text-muted-foreground cursor-not-allowed",
                   )}
                   onClick={() =>
                     handleAddingToCart({
@@ -313,7 +325,11 @@ export const ProductDetailView = ({
                   disabled={(selectedVariant?.inventory ?? 0) <= 0}
                 >
                   <ShoppingCart className="w-5 h-5" />
-                  <span>{(selectedVariant?.inventory ?? 0) > 0 ? "Add to Cart" : "Out of Stock"}</span>
+                  <span>
+                    {(selectedVariant?.inventory ?? 0) > 0
+                      ? "Add to Cart"
+                      : "Out of Stock"}
+                  </span>
                 </button>
                 {/* <button className="px-6 py-3 border border-input rounded-lg font-medium hover:bg-secondary transition-colors">
                   <Gift className="w-5 h-5" />
