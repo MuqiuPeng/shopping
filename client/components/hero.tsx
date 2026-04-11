@@ -1,16 +1,13 @@
-import Image from "next/image";
 import ThemedButton from "./theme-button";
 
 export default function Hero() {
   return (
     <section className="relative h-[500px] md:h-[600px] bg-secondary overflow-hidden">
       <div className="absolute inset-0 opacity-70">
-        <Image
+        <img
           src="/hero-pearl-crystal-luxury.jpg"
           alt="Pearl and crystal luxury bracelets"
-          fill
-          className="object-cover"
-          priority
+          className="w-full h-full object-cover"
         />
       </div>
 
