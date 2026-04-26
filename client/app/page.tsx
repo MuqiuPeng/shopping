@@ -4,6 +4,7 @@ import HotSelling from "@/components/hot-selling";
 import Recommended from "@/components/recommended";
 import Footer from "@/components/footer";
 import Link from "next/link";
+import ThemedButton from "@/components/theme-button";
 
 export default function Home() {
   return (
@@ -22,24 +23,16 @@ export default function Home() {
             coupon functionality
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/cart"
-              className="inline-flex items-center px-6 py-3 bg-accent text-accent-foreground rounded-lg hover:bg-accent/90 transition-colors font-medium"
-            >
+            <ThemedButton href="/cart" size="lg">
               View Shopping Cart
-            </Link>
-            <Link
-              href="/checkout/success"
-              className="inline-flex items-center px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
-            >
+            </ThemedButton>
+            <ThemedButton size="lg">Quick Cart Access</ThemedButton>
+            <ThemedButton href="/checkout/success" size="lg">
               View Payment Success
-            </Link>
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center px-6 py-3 bg-secondary text-secondary-foreground border border-border rounded-lg hover:bg-secondary/80 transition-colors font-medium"
-            >
+            </ThemedButton>
+            <ThemedButton href="/dashboard" size="lg">
               View User Dashboard
-            </Link>
+            </ThemedButton>
           </div>
         </div>
       </div>

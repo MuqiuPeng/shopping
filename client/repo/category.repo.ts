@@ -7,11 +7,13 @@ class CategoryRepo {
       // cat-0 and all marketing categories will be ignored.
       const firstLevelCategoriesResponse = await db.categories.findMany({
         where: {
-          parentId: "cat-0",
+          parentId: "cate-all",
           NOT: [
-            { id: "cat-0" },
             {
               id: { startsWith: "marketing-" },
+            },
+            {
+              id: { startsWith: "cate-all" },
             },
           ],
         },
@@ -34,7 +36,7 @@ class CategoryRepo {
     } catch (error) {
       console.error(
         `Error fetching category path for categoryId ${categoryId}:`,
-        error
+        error,
       );
       return null;
     }

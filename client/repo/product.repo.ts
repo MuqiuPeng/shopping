@@ -16,7 +16,7 @@ export class ProductRepo {
    */
   public static async getMarketingProductsLimit(
     marketId: marketingCategory,
-    limit: number
+    limit: number,
   ) {
     const hotProducts = await db.products.findMany({
       take: limit,

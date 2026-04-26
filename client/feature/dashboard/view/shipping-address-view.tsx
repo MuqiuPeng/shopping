@@ -127,7 +127,7 @@ export default function ShippingAddressView() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => removeAddress(address)}
+                    onClick={() => removeAddress(address.id)}
                     className="h-8 text-xs gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10"
                   >
                     <Trash2 className="w-3.5 h-3.5" />

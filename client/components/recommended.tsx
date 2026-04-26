@@ -4,6 +4,7 @@ import { useMarketingProductsList } from "@/hooks/product.hook";
 import ProductCard from "./product-card";
 import { MarketSectionLoading } from "./market-section-loading";
 import { prismaType } from "@/types";
+import ThemedButton from "./theme-button";
 
 export default function Recommended() {
   const {
@@ -27,11 +28,7 @@ export default function Recommended() {
       )}
 
       <div className="flex justify-center mt-12">
-        {isLoading ? null : (
-          <button className="px-8 py-3 bg-secondary text-foreground font-light border border-border hover:bg-accent hover:text-accent-foreground transition rounded-lg">
-            See More
-          </button>
-        )}
+        {isLoading ? null : <ThemedButton>See More</ThemedButton>}
       </div>
     </section>
   );
