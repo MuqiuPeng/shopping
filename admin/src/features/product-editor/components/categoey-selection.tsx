@@ -92,22 +92,37 @@ export const CategorySelection = ({
 
   const filteredCategories = useMemo(() => {
     if (!searchTerm) return categoriesHierarchy;
+    const q = searchTerm.toLowerCase();
 
-    const searchLower = searchTerm.toLowerCase();
-    return categoriesHierarchy.filter((cat) => {
-      const matchesSearch = cat.name.toLowerCase().includes(searchLower);
-      const hasMatchingChildren =
-        cat.children &&
-        cat.children.some((child: any) => {
-          const recurseCheck = (c: any) =>
-            c.name.toLowerCase().includes(searchLower) ||
-            (c.children && c.children.some(recurseCheck));
-          return recurseCheck(child);
-        });
+    const prune = (nodes: any[]): any[] => {
+      const result: any[] = [];
+      for (const node of nodes) {
+        const matches = (node.name || '').toLowerCase().includes(q);
+        const prunedChildren = prune(node.children || []);
+        if (matches || prunedChildren.length > 0) {
+          result.push({ ...node, children: prunedChildren });
+        }
+      }
+      return result;
+    };
 
-      return matchesSearch || hasMatchingChildren;
-    });
+    return prune(categoriesHierarchy);
   }, [categoriesHierarchy, searchTerm]);
+
+  const effectiveExpandedIds = useMemo(() => {
+    if (!searchTerm) return expandedIds;
+    const ids = new Set<string>();
+    const walk = (nodes: any[]) => {
+      for (const n of nodes) {
+        if (n.children && n.children.length > 0) {
+          ids.add(n.id);
+          walk(n.children);
+        }
+      }
+    };
+    walk(filteredCategories);
+    return ids;
+  }, [filteredCategories, expandedIds, searchTerm]);
 
   const toggleExpand = (id: string) => {
     const newExpanded = new Set(expandedIds);
@@ -188,7 +203,7 @@ export const CategorySelection = ({
                   key={category.id}
                   category={category}
                   level={0}
-                  expandedIds={expandedIds}
+                  expandedIds={effectiveExpandedIds}
                   selectedIds={selectedIds}
                   toggleExpand={toggleExpand}
                   toggleSelectCategory={toggleSelectCategory}
