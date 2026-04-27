@@ -56,27 +56,29 @@ export const CategoryTreeItem = ({
         )}
         {!hasChildren && <div className='w-5 flex-shrink-0' />}
 
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            toggleSelectCategory(category.id);
-          }}
-          className={cn(
-            'flex h-5 w-5 flex-shrink-0 cursor-pointer items-center justify-center rounded border-2 transition-all duration-200',
-            isSelected
-              ? 'bg-primary border-primary scale-100'
-              : 'border-input hover:border-primary hover:bg-accent/10 active:scale-95'
-          )}
-          aria-label={isSelected ? 'Deselect category' : 'Select category'}
-        >
-          {isSelected && (
-            <Check
-              size={14}
-              className='text-primary-foreground'
-              strokeWidth={3}
-            />
-          )}
-        </button>
+        {!hasChildren && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleSelectCategory(category.id);
+            }}
+            className={cn(
+              'flex h-5 w-5 flex-shrink-0 cursor-pointer items-center justify-center rounded border-2 transition-all duration-200',
+              isSelected
+                ? 'bg-primary border-primary scale-100'
+                : 'border-input hover:border-primary hover:bg-accent/10 active:scale-95'
+            )}
+            aria-label={isSelected ? 'Deselect category' : 'Select category'}
+          >
+            {isSelected && (
+              <Check
+                size={14}
+                className='text-primary-foreground'
+                strokeWidth={3}
+              />
+            )}
+          </button>
+        )}
 
         {hasChildren && (
           <Folder
