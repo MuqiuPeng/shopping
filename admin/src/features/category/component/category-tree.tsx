@@ -1,12 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Search } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 import { categoryType } from '../schema/category-schema';
-import CategoryTreeItem, { InlineCategoryInput } from './category-tree-item';
+import CategoryTreeItem from './category-tree-item';
 
 interface CategoryTreeProps {
   categories: categoryType[];
@@ -24,9 +23,9 @@ export default function CategoryTree({
   categories
 }: CategoryTreeProps) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-  const [addingParentId, setAddingParentId] = useState<
-    string | null | undefined
-  >(undefined);
+  const [addingParentId, setAddingParentId] = useState<string | undefined>(
+    undefined
+  );
 
   const rootCategories = categories.filter((c) => !c.parentId);
   const filteredCategories = rootCategories.filter((c) =>
@@ -39,21 +38,11 @@ export default function CategoryTree({
     setExpandedIds(newExpanded);
   };
 
-  const handleAddRootClick = () => {
-    setAddingParentId(null);
-  };
-
   return (
     <div className='flex h-full flex-col gap-4'>
       {/* Header */}
       <div className='space-y-3'>
-        <div className='flex items-center justify-between'>
-          <h2 className='text-foreground text-lg font-semibold'>Categories</h2>
-          <Button size='sm' onClick={handleAddRootClick} className='gap-2'>
-            <Plus className='h-4 w-4' />
-            <span className='hidden sm:inline'>Add</span>
-          </Button>
-        </div>
+        <h2 className='text-foreground text-lg font-semibold'>Categories</h2>
 
         {/* Search */}
         <div className='relative'>
@@ -69,35 +58,28 @@ export default function CategoryTree({
 
       {/* Tree */}
       <div className='border-border bg-card flex-1 space-y-1 overflow-y-auto rounded-lg border p-3'>
-        {addingParentId === null && (
-          <InlineCategoryInput
-            level={0}
-            parentId={null}
-            onClose={() => setAddingParentId(undefined)}
-          />
+        {filteredCategories.length > 0 ? (
+          filteredCategories.map((category) => (
+            <CategoryTreeItem
+              categories={categories}
+              key={category.id}
+              category={category}
+              isExpanded={expandedIds.has(category.id)}
+              selectedId={selectedId}
+              onToggleExpand={toggleExpand}
+              onSelect={onSelectCategory}
+              level={0}
+              expandedIds={expandedIds}
+              setExpandedIds={setExpandedIds}
+              addingParentId={addingParentId}
+              setAddingParentId={setAddingParentId}
+            />
+          ))
+        ) : (
+          <p className='text-muted-foreground py-8 text-center text-sm'>
+            No categories found
+          </p>
         )}
-        {filteredCategories.length > 0
-          ? filteredCategories.map((category) => (
-              <CategoryTreeItem
-                categories={categories}
-                key={category.id}
-                category={category}
-                isExpanded={expandedIds.has(category.id)}
-                selectedId={selectedId}
-                onToggleExpand={toggleExpand}
-                onSelect={onSelectCategory}
-                level={0}
-                expandedIds={expandedIds}
-                setExpandedIds={setExpandedIds}
-                addingParentId={addingParentId}
-                setAddingParentId={setAddingParentId}
-              />
-            ))
-          : addingParentId !== null && (
-              <p className='text-muted-foreground py-8 text-center text-sm'>
-                No categories found
-              </p>
-            )}
       </div>
     </div>
   );

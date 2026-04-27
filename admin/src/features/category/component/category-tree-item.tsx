@@ -17,8 +17,8 @@ interface CategoryTreeItemProps {
   level: number;
   expandedIds: Set<string>;
   setExpandedIds: (ids: Set<string>) => void;
-  addingParentId: string | null | undefined;
-  setAddingParentId: (id: string | null | undefined) => void;
+  addingParentId: string | undefined;
+  setAddingParentId: (id: string | undefined) => void;
 }
 
 export default function CategoryTreeItem({
@@ -190,7 +190,7 @@ export function InlineCategoryInput({
         onBlur={() => {
           if (!isSubmitting) onClose();
         }}
-        placeholder='New category name (Enter to add, Esc to cancel)'
+        placeholder='New category'
         disabled={isSubmitting}
         className='h-7 text-sm'
       />
