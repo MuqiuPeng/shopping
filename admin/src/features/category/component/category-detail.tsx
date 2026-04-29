@@ -4,6 +4,11 @@ import { useState, useEffect } from 'react';
 import { Trash2, Edit2, Loader2, Router } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@/components/ui/tooltip';
 
 import { onToast, onToastError } from '@/lib/toast';
 import { useConfirmDialog } from '@/components/confirm-dialog-provider';
@@ -84,24 +89,67 @@ export default function CategoryDetail({
         </h2>
         {!isEditing && (
           <div className='flex gap-2'>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={() => setIsEditing(true)}
-              className='gap-2'
-            >
-              <Edit2 className='h-4 w-4' />
-              Edit
-            </Button>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={handleDelete}
-              className='text-destructive hover:bg-destructive/10 gap-2'
-            >
-              <Trash2 className='h-4 w-4' />
-              Delete
-            </Button>
+            {category?.isProtected ? (
+              <>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className='inline-block'>
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        disabled
+                        className='pointer-events-none gap-2'
+                      >
+                        <Edit2 className='h-4 w-4' />
+                        Edit
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    System category — cannot be edited.
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className='inline-block'>
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        disabled
+                        className='text-destructive pointer-events-none gap-2'
+                      >
+                        <Trash2 className='h-4 w-4' />
+                        Delete
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    System category — cannot be deleted.
+                  </TooltipContent>
+                </Tooltip>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => setIsEditing(true)}
+                  className='gap-2'
+                >
+                  <Edit2 className='h-4 w-4' />
+                  Edit
+                </Button>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={handleDelete}
+                  className='text-destructive hover:bg-destructive/10 gap-2'
+                >
+                  <Trash2 className='h-4 w-4' />
+                  Delete
+                </Button>
+              </>
+            )}
           </div>
         )}
       </div>
