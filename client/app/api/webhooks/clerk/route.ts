@@ -3,6 +3,8 @@ import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
+import { emitCustomerEvent } from "@/lib/events/dispatcher";
+import { CustomerEventType } from "@prisma/client";
 
 export async function POST(req: Request) {
   console.log("📬 Clerk webhook received");
@@ -65,6 +67,12 @@ export async function POST(req: Request) {
           dbId: customer.id,
           createdAt: new Date().toISOString(),
         },
+      });
+
+      await emitCustomerEvent({
+        type: CustomerEventType.USER_SIGNUP,
+        customerId: customer.id,
+        payload: { clerkId: id, email: customer.email },
       });
 
       return new Response("Success: Customer created and metadata updated", {
